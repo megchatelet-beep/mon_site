@@ -401,6 +401,12 @@ function renderBase(type, title, c) {
     return `<h1 class="wip-title">${title}</h1>${c.status?`<p class="wip-status">${c.status}</p>`:''}<div class="wip-bar"><div class="wip-fill" style="width:${c.progress||0}%"></div><div class="wip-dot" style="left:${c.progress||0}%"></div></div><p class="wip-pct">${c.progress||0}%</p><p class="wip-body" style="margin-top:2rem">${c.body||''}</p>`;
   if (type==='libre')
     return title ? `<h1 class="essay-title">${title}</h1>` : '';
+  if (type==='typing')
+    return renderTyping(title);
+  if (type==='memoire')
+    return renderMemoire(title);
+  if (type==='jeu2048')
+    return render2048(title);
   if (type==='snake')
     return renderSnake(title);
   if (type==='jeu')
@@ -830,6 +836,307 @@ function initSnake(visitCount) {
   reset(); draw();
   if (window._snakeInterval) clearInterval(window._snakeInterval);
   window._snakeInterval = interval;
+}
+
+// ── Typing game
+const TYPING_WORDS = [
+  ['chat','lune','mer','feu','nuit','eau','vent','ciel','main','voix'],
+  ['forêt','maison','soleil','rivière','silence','lumière','nuage','chemin','jardin','fenêtre'],
+  ['souvenir','liberté','mystère','frontière','aventure','paysage','crépuscule','murmure','horizon','éternité'],
+  ['mélancolie','métamorphose','bienveillance','contemplation','vraisemblable','imperceptible','extraordinaire','philosophie','renaissance','appartenance']
+];
+
+function renderTyping(title) {
+  const visits = parseInt(localStorage.getItem('typing-visits')||'0');
+  localStorage.setItem('typing-visits', visits+1);
+  setTimeout(() => initTyping(visits), 80);
+  return `
+    <div class="game-wrap">
+      <h1 class="game-title">${title||'typing'}</h1>
+      <p class="game-score" id="t-score">0 / 0</p>
+      <div id="t-word" style="font-family:'Lora',serif;font-size:clamp(1.5rem,4vw,2.5rem);font-weight:400;letter-spacing:0.05em;min-height:3rem;text-align:center;margin:1rem 0"></div>
+      <input id="t-input" class="game-search-input" style="font-size:1rem;max-width:320px;display:none" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="tape ici...">
+      <p class="game-msg" id="t-msg">cliquer pour commencer</p>
+      <div class="game-search" id="typing-search-wrap" style="display:none">
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
+        <input class="game-search-input" id="typing-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
+        <div class="game-search-results" id="game-search-results"></div>
+      </div>
+    </div>`;
+}
+
+function initTyping(visitCount) {
+  const diff = Math.min(visitCount||0, 3);
+  const wordList = TYPING_WORDS[diff];
+  let words, current, correct, total;
+
+  const wordEl  = document.getElementById('t-word');
+  const input   = document.getElementById('t-input');
+  const msgEl   = document.getElementById('t-msg');
+  const scoreEl = document.getElementById('t-score');
+  if (!wordEl||!input||!msgEl) return;
+
+  const setMsg = t => { if(msgEl) msgEl.textContent=t; };
+  const showSearch = () => {
+    const w = document.getElementById('typing-search-wrap');
+    if (w) { w.style.display='flex'; document.getElementById('typing-search-input')?.focus(); }
+  };
+
+  function start() {
+    words = [...wordList].sort(()=>Math.random()-0.5).slice(0,8);
+    correct=0; total=words.length; current=0;
+    input.style.display='block'; input.value=''; input.focus();
+    setMsg(''); scoreEl.textContent=`0 / ${total}`;
+    showWord();
+  }
+
+  function showWord() {
+    if (current>=words.length) {
+      wordEl.textContent='';
+      input.style.display='none';
+      setMsg('gagné ! cherche quelque chose →');
+      showSearch(); return;
+    }
+    // Show word for 1.2s then hide
+    input.value=''; input.disabled=true; input.style.opacity='0.3';
+    wordEl.style.opacity='1';
+    wordEl.textContent = words[current];
+    setTimeout(() => {
+      wordEl.style.transition='opacity 0.4s';
+      wordEl.style.opacity='0';
+      setTimeout(() => {
+        wordEl.textContent='_';
+        wordEl.style.opacity='0.15';
+        input.disabled=false; input.style.opacity='1'; input.focus();
+      }, 400);
+    }, 1200);
+  }
+
+  input.addEventListener('input', () => {
+    const val = input.value.trim();
+    if (val === words[current]) {
+      correct++; current++;
+      scoreEl.textContent=`${correct} / ${total}`;
+      showWord();
+    }
+  });
+
+  msgEl.addEventListener('click', start);
+  document.getElementById('t-word')?.addEventListener('click', start);
+}
+
+// ── Mémoire game
+const MEMOIRE_SYMBOLS = ['◆','●','▲','■','★','♦','◉','▼','❋','⬟','◈','⬡'];
+
+function renderMemoire(title) {
+  const visits = parseInt(localStorage.getItem('memoire-visits')||'0');
+  localStorage.setItem('memoire-visits', visits+1);
+  setTimeout(() => initMemoire(visits), 80);
+  return `
+    <div class="game-wrap">
+      <h1 class="game-title">${title||'mémoire'}</h1>
+      <p class="game-score" id="m-score">paires — 0</p>
+      <div id="m-grid" style="display:grid;gap:0.5rem;margin:1rem 0;width:100%;max-width:400px"></div>
+      <p class="game-msg" id="m-msg">cliquer pour commencer</p>
+      <div class="game-search" id="memoire-search-wrap" style="display:none">
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
+        <input class="game-search-input" id="memoire-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
+        <div class="game-search-results" id="game-search-results"></div>
+      </div>
+    </div>`;
+}
+
+function initMemoire(visitCount) {
+  const diff = Math.min(visitCount||0, 3);
+  const pairCounts = [4, 6, 8, 10];
+  const pairs = pairCounts[diff];
+  const cols = pairs <= 4 ? 4 : pairs <= 6 ? 4 : pairs <= 8 ? 4 : 4;
+
+  const grid = document.getElementById('m-grid');
+  const msgEl = document.getElementById('m-msg');
+  const scoreEl = document.getElementById('m-score');
+  if (!grid||!msgEl) return;
+
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+  let cards=[], flipped=[], matched=0, locked=false;
+
+  const setMsg = t => { if(msgEl) msgEl.textContent=t; };
+  const showSearch = () => {
+    const w = document.getElementById('memoire-search-wrap');
+    if (w) { w.style.display='flex'; document.getElementById('memoire-search-input')?.focus(); }
+  };
+
+  function start() {
+    matched=0; flipped=[]; locked=false;
+    const syms = MEMOIRE_SYMBOLS.slice(0,pairs);
+    const deck = [...syms,...syms].sort(()=>Math.random()-0.5);
+    grid.innerHTML = '';
+    cards = deck.map((sym,i) => {
+      const el = document.createElement('div');
+      el.style.cssText = `aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.4rem;border:1px solid currentColor;opacity:0.15;cursor:pointer;transition:opacity 0.2s;user-select:none`;
+      el.dataset.sym = sym;
+      el.dataset.revealed = '0';
+      el.textContent = sym;
+      el.addEventListener('click', () => flip(el));
+      grid.appendChild(el);
+      return el;
+    });
+    setMsg(''); scoreEl.textContent='paires — 0';
+  }
+
+  function flip(el) {
+    if (locked||el.dataset.revealed==='1'||flipped.includes(el)) return;
+    el.style.opacity='0.85';
+    flipped.push(el);
+    if (flipped.length===2) {
+      locked=true;
+      setTimeout(() => {
+        if (flipped[0].dataset.sym===flipped[1].dataset.sym) {
+          flipped.forEach(c=>{ c.dataset.revealed='1'; c.style.opacity='0.35'; c.style.cursor='default'; });
+          matched++;
+          scoreEl.textContent=`paires — ${matched}`;
+          if (matched===pairs) { setMsg('gagné ! cherche quelque chose →'); showSearch(); }
+        } else {
+          flipped.forEach(c=>c.style.opacity='0.15');
+        }
+        flipped=[]; locked=false;
+      }, 700);
+    }
+  }
+
+  msgEl.addEventListener('click', start);
+}
+
+// ── 2048 game
+function render2048(title) {
+  const visits = parseInt(localStorage.getItem('2048-visits')||'0');
+  localStorage.setItem('2048-visits', visits+1);
+  setTimeout(() => init2048(visits), 80);
+  return `
+    <div class="game-wrap">
+      <h1 class="game-title">${title||'2048'}</h1>
+      <p class="game-score" id="g2-score">score — 0</p>
+      <div id="g2-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem;width:100%;max-width:360px;margin:0.5rem 0"></div>
+      <p class="game-msg" id="g2-msg">cliquer pour commencer</p>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;opacity:0.28;text-align:center">flèches ou swipe pour jouer</p>
+      <div class="game-search" id="g2-search-wrap" style="display:none">
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
+        <input class="game-search-input" id="g2-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
+        <div class="game-search-results" id="game-search-results"></div>
+      </div>
+    </div>`;
+}
+
+function init2048(visitCount) {
+  const grid = document.getElementById('g2-grid');
+  const msgEl = document.getElementById('g2-msg');
+  const scoreEl = document.getElementById('g2-score');
+  if (!grid||!msgEl) return;
+
+  // Target: 512 for beginners, 1024 normal, 2048 experienced
+  const diff = Math.min(visitCount||0, 2);
+  const TARGET = [512, 1024, 2048][diff];
+
+  let board, score, state='idle', won=false;
+
+  const setMsg = t => { if(msgEl) msgEl.textContent=t; };
+  const showSearch = () => {
+    const w = document.getElementById('g2-search-wrap');
+    if (w) { w.style.display='flex'; document.getElementById('g2-search-input')?.focus(); }
+  };
+
+  function newBoard() {
+    board = Array(4).fill(null).map(()=>Array(4).fill(0));
+    score=0; won=false;
+    addTile(); addTile();
+    render();
+  }
+
+  function addTile() {
+    const empty=[];
+    for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(!board[r][c]) empty.push([r,c]);
+    if(!empty.length) return;
+    const [r,c]=empty[Math.floor(Math.random()*empty.length)];
+    board[r][c]=Math.random()<0.9?2:4;
+  }
+
+  function render() {
+    scoreEl.textContent=`score — ${score}`;
+    grid.innerHTML='';
+    for(let r=0;r<4;r++) for(let c=0;c<4;c++) {
+      const v=board[r][c];
+      const el=document.createElement('div');
+      const op=v?0.15+Math.log2(v)*0.07:0.06;
+      el.style.cssText=`aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:${v>=1024?'0.7rem':'0.85rem'};border:1px solid currentColor;opacity:${Math.min(op,0.95)};transition:opacity 0.15s`;
+      el.textContent=v||'';
+      grid.appendChild(el);
+    }
+  }
+
+  function slide(row) {
+    let a=row.filter(x=>x);
+    for(let i=0;i<a.length-1;i++) {
+      if(a[i]===a[i+1]){ a[i]*=2; score+=a[i]; a.splice(i+1,1); }
+    }
+    while(a.length<4) a.push(0);
+    return a;
+  }
+
+  function move(dir) {
+    if(state!=='playing') return;
+    let moved=false;
+    const b=board.map(r=>[...r]);
+    if(dir==='left')  board=board.map(r=>{const s=slide(r);if(s.join()!==r.join())moved=true;return s;});
+    if(dir==='right') board=board.map(r=>{const s=slide([...r].reverse()).reverse();if(s.join()!==r.join())moved=true;return s;});
+    if(dir==='up'||dir==='down') {
+      for(let c=0;c<4;c++){
+        let col=board.map(r=>r[c]);
+        if(dir==='down') col.reverse();
+        const s=slide(col);
+        if(dir==='down') s.reverse();
+        s.forEach((v,r)=>{if(board[r][c]!==v)moved=true; board[r][c]=v;});
+      }
+    }
+    if(!moved) return;
+    addTile(); render();
+    // Check win
+    if(!won && board.flat().some(v=>v>=TARGET)) {
+      won=true; state='won';
+      setMsg('gagné ! cherche quelque chose →');
+      showSearch(); return;
+    }
+    // Check lose
+    const hasMoves = board.flat().some(v=>!v) ||
+      board.some((r,ri)=>r.some((v,ci)=>
+        (ri<3&&board[ri+1][ci]===v)||(ci<3&&board[ri][ci+1]===v)
+      ));
+    if(!hasMoves) { state='idle'; setMsg('game over — cliquer pour rejouer'); }
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', e=>{
+    const map={'ArrowLeft':'left','ArrowRight':'right','ArrowUp':'up','ArrowDown':'down'};
+    if(map[e.key]){ e.preventDefault(); move(map[e.key]); }
+  });
+
+  // Touch swipe
+  let t2=null;
+  grid.addEventListener('touchstart',e=>{t2=e.touches[0];},{passive:true});
+  grid.addEventListener('touchend',e=>{
+    if(!t2) return;
+    const dx=e.changedTouches[0].clientX-t2.clientX;
+    const dy=e.changedTouches[0].clientY-t2.clientY;
+    if(Math.abs(dx)>Math.abs(dy)) move(dx>0?'right':'left');
+    else move(dy>0?'down':'up');
+  },{passive:true});
+
+  msgEl.addEventListener('click',()=>{
+    if(state==='idle'||state==='won'){
+      state='playing'; newBoard(); setMsg('');
+      const w=document.getElementById('g2-search-wrap'); if(w) w.style.display='none';
+    }
+  });
 }
 
 // ── Audio
