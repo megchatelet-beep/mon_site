@@ -416,7 +416,12 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0
       <!-- Title -->
       <input type="text" id="f-title" placeholder="titre de l'entrée...">
 
-      <!-- Base fields (type-specific) -->
+      <!-- Keywords -->
+      <div style="margin-bottom:1.5rem">
+        <label style="display:block;font-size:0.54rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem">mots-clés (invisibles sur le site, pour la recherche)</label>
+        <div class="tags-wrap" id="keywords-wrap"></div>
+        <button class="tag-add" onclick="addKeyword()" style="margin-top:0.3rem">+ mot-clé</button>
+      </div>
       <p class="section-label">contenu principal</p>
       <div id="base-fields"></div>
 
@@ -548,6 +553,13 @@ function loadEditor(d) {
   document.getElementById('f-type').value = type;
   document.getElementById('f-title').value = d?.title || '';
   document.getElementById('f-published').checked = d?.published !== false;
+
+  // Load keywords
+  const kwWrap = document.getElementById('keywords-wrap');
+  kwWrap.innerHTML = '';
+  const keywords = d?.content?.base?.keywords || d?.content?.keywords || [];
+  keywords.forEach(k => addKeyword(k));
+  if (keywords.length === 0) addKeyword(); // start with one empty slot
 
   // Load blocks
   blocks = (d?.content?.blocks || []).map(b => ({ id: blockCtr++, ...b }));
@@ -985,7 +997,10 @@ async function save() {
     title,
     published: document.getElementById('f-published').checked,
     content: {
-      base:   collectBase(),
+      base: {
+        ...collectBase(),
+        keywords: [...document.querySelectorAll('.kw-input')].map(i=>i.value.trim()).filter(Boolean)
+      },
       blocks: collectBlocks()
     }
   };
@@ -1095,6 +1110,18 @@ function insertHtml(targetId, type) {
   el.value = el.value.substring(0, start) + replacement + el.value.substring(end);
   el.selectionStart = el.selectionEnd = start + replacement.length;
   el.focus();
+}
+
+function addKeyword(val='') {
+  const wrap = document.getElementById('keywords-wrap');
+  if (!wrap) return;
+  const idx = wrap.children.length;
+  const div = document.createElement('div');
+  div.className = 'tag-row';
+  div.id = `kw-row-${idx}`;
+  div.innerHTML = `<input type="text" class="kw-input" value="${esc(val)}" placeholder="ex: montréal, cinéma, été...">
+    <button class="tag-rm" onclick="this.parentElement.remove()">×</button>`;
+  wrap.appendChild(div);
 }
 
 function updateImageLayout() {} // kept for compatibility
