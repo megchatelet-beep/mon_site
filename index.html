@@ -840,10 +840,10 @@ function initSnake(visitCount) {
 
 // ── Typing game
 const TYPING_WORDS = [
-  ['chat','lune','mer','feu','nuit','eau','vent','ciel','main','voix'],
-  ['forêt','maison','soleil','rivière','silence','lumière','nuage','chemin','jardin','fenêtre'],
-  ['souvenir','liberté','mystère','frontière','aventure','paysage','crépuscule','murmure','horizon','éternité'],
-  ['mélancolie','métamorphose','bienveillance','contemplation','vraisemblable','imperceptible','extraordinaire','philosophie','renaissance','appartenance']
+  ['souvenir','liberté','mystère','frontière','paysage','crépuscule','murmure','horizon','éternité','appartenir'],
+  ['mélancolie','métamorphose','bienveillance','contemplation','imperceptible','extraordinaire','philosophie','renaissance','vraisemblable','transparence'],
+  ['invraisemblable','incompréhensible','désenchantement','épanouissement','perfectionnement','bouleversement','pressentiment','dépouillement','accomplissement','rapprochement'],
+  ['irréprochable','imperméabiliser','inconditionnellement','déresponsabiliser','incompatibilité','irrémédiablement','désappropriation','incommensurable','irréversibilité','incompréhension']
 ];
 
 function renderTyping(title) {
@@ -897,19 +897,22 @@ function initTyping(visitCount) {
       setMsg('gagné ! cherche quelque chose →');
       showSearch(); return;
     }
-    // Show word for 1.2s then hide
+    // Display time decreases with difficulty: 1000ms → 600ms → 400ms → 250ms
+    const displayTimes = [1000, 600, 400, 250];
+    const displayTime = displayTimes[Math.min(diff,3)];
     input.value=''; input.disabled=true; input.style.opacity='0.3';
+    wordEl.style.transition='none';
     wordEl.style.opacity='1';
     wordEl.textContent = words[current];
     setTimeout(() => {
-      wordEl.style.transition='opacity 0.4s';
+      wordEl.style.transition='opacity 0.3s';
       wordEl.style.opacity='0';
       setTimeout(() => {
         wordEl.textContent='_';
         wordEl.style.opacity='0.15';
         input.disabled=false; input.style.opacity='1'; input.focus();
-      }, 400);
-    }, 1200);
+      }, 300);
+    }, displayTime);
   }
 
   input.addEventListener('input', () => {
@@ -977,7 +980,7 @@ function initMemoire(visitCount) {
       el.style.cssText = `aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.4rem;border:1px solid currentColor;opacity:0.15;cursor:pointer;transition:opacity 0.2s;user-select:none`;
       el.dataset.sym = sym;
       el.dataset.revealed = '0';
-      el.textContent = sym;
+      el.textContent = ''; // hidden by default
       el.addEventListener('click', () => flip(el));
       grid.appendChild(el);
       return el;
@@ -987,6 +990,7 @@ function initMemoire(visitCount) {
 
   function flip(el) {
     if (locked||el.dataset.revealed==='1'||flipped.includes(el)) return;
+    el.textContent = el.dataset.sym;
     el.style.opacity='0.85';
     flipped.push(el);
     if (flipped.length===2) {
@@ -998,7 +1002,7 @@ function initMemoire(visitCount) {
           scoreEl.textContent=`paires — ${matched}`;
           if (matched===pairs) { setMsg('gagné ! cherche quelque chose →'); showSearch(); }
         } else {
-          flipped.forEach(c=>c.style.opacity='0.15');
+          flipped.forEach(c=>{ c.style.opacity='0.15'; c.textContent=''; });
         }
         flipped=[]; locked=false;
       }, 700);
