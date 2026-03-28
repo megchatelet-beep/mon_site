@@ -574,14 +574,14 @@ function typeOptions(cat, sel) {
     création: ['video','audio','image','bd','fiction','projet','libre'],
     notes:    ['thought','citation','lien','recommendation','poeme','musique','recipe','libre'],
     wip:      ['wip','libre'],
-    jeu:      ['jeu','snake'],
+    jeu:      ['jeu','snake','typing','memoire','jeu2048'],
   };
   const labels = {
     essay:'essai', video:'vidéo vimeo', audio:'audio', image:'image / photo',
     bd:'bande dessinée', fiction:'fiction', projet:'projet',
     thought:'pensée', citation:'citation', lien:'lien commenté',
     recommendation:'recommandation', poeme:'poème', musique:'musique',
-    recipe:'recette', wip:'wip', jeu:'brick breaker', snake:'snake', libre:'libre (juste des blocs)'
+    recipe:'recette', wip:'wip', jeu:'brick breaker', snake:'snake', typing:'typing', memoire:'mémoire', jeu2048:'2048', libre:'libre (juste des blocs)'
   };
   return (map[cat]||['thought']).map(t =>
     `<option value="${t}" ${t===sel?'selected':''}>${labels[t]||t}</option>`
@@ -735,6 +735,15 @@ function renderBaseFields(saved = null) {
         <div class="tags-wrap" id="steps-wrap">${steps.map((v,i)=>tagRow('step',i,v)).join('')}</div>
         <button class="tag-add" onclick="addTag('step','steps-wrap')">+ étape</button>
       </div>`;
+  }
+  else if (type === 'typing') {
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">Le jeu typing est généré automatiquement — rien à configurer !</p>`;
+  }
+  else if (type === 'memoire') {
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">Le jeu mémoire est généré automatiquement — rien à configurer !</p>`;
+  }
+  else if (type === 'jeu2048') {
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">Le jeu 2048 est généré automatiquement — rien à configurer !</p>`;
   }
   else if (type === 'snake') {
     cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">Le jeu snake est généré automatiquement — rien à configurer !</p>`;
@@ -955,6 +964,9 @@ function collectBase() {
   }
   if (type==='musique')        return { title: v('b-mus-title'), artist: v('b-mus-artist'), image_url: v('b-mus-img-url'), sc_url: v('b-sc-url'), note: v('b-mus-note') };
   if (type==='jeu')            return { subtitle: v('b-subtitle') };
+  if (type==='typing')          return {};
+  if (type==='memoire')         return {};
+  if (type==='jeu2048')         return {};
   if (type==='snake')          return {};
   if (type==='libre')          return {};
   if (type==='wip') return { status: v('b-status'), body: v('b-body'), progress: parseInt(v('b-progress'))||0 };
