@@ -567,7 +567,9 @@ function initGame(visitCount) {
   canvas.addEventListener('touchmove',e=>{
     e.preventDefault();
     const r=canvas.getBoundingClientRect();
-    PAD.x=Math.max(0,Math.min(W-PAD.w,e.touches[0].clientX-r.left-PAD.w/2));
+    const scaleX = W / r.width;
+    const tx = (e.touches[0].clientX - r.left) * scaleX;
+    PAD.x=Math.max(0,Math.min(W-PAD.w, tx - PAD.w/2));
     if(state==='idle') balls.forEach(b=>{b.x=PAD.x+PAD.w/2; b.y=PAD.y-b.r-2;});
   },{passive:false});
   canvas.addEventListener('click',()=>{
@@ -854,9 +856,9 @@ function renderTyping(title) {
     <div class="game-wrap">
       <h1 class="game-title">${title||'typing'}</h1>
       <p class="game-score" id="t-score">0 / 0</p>
-      <div id="t-word" style="font-family:'Lora',serif;font-size:clamp(1.5rem,4vw,2.5rem);font-weight:400;letter-spacing:0.05em;min-height:3rem;text-align:center;margin:1rem 0"></div>
-      <input id="t-input" class="game-search-input" style="font-size:1rem;max-width:320px;display:none" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="tape ici...">
-      <p class="game-msg" id="t-msg">cliquer pour commencer</p>
+      <div id="t-word" style="font-family:'Lora',serif;font-size:clamp(1.5rem,4vw,2.5rem);font-weight:400;letter-spacing:0.05em;min-height:3rem;text-align:center;margin:1rem 0;transition:opacity 0.3s"></div>
+      <input id="t-input" class="game-search-input" style="font-size:1rem;max-width:320px;width:100%;visibility:hidden" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="tape ici...">
+      <p class="game-msg" id="t-msg" style="cursor:pointer">appuyer pour commencer</p>
       <div class="game-search" id="typing-search-wrap" style="display:none">
         <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
         <input class="game-search-input" id="typing-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
@@ -885,7 +887,7 @@ function initTyping(visitCount) {
   function start() {
     words = [...wordList].sort(()=>Math.random()-0.5).slice(0,8);
     correct=0; total=words.length; current=0;
-    input.style.display='block'; input.value=''; input.focus();
+    input.style.visibility='visible'; input.value='';
     setMsg(''); scoreEl.textContent=`0 / ${total}`;
     showWord();
   }
@@ -893,11 +895,10 @@ function initTyping(visitCount) {
   function showWord() {
     if (current>=words.length) {
       wordEl.textContent='';
-      input.style.display='none';
+      input.style.visibility='hidden';
       setMsg('gagné ! cherche quelque chose →');
       showSearch(); return;
     }
-    // Display time decreases with difficulty: 1000ms → 600ms → 400ms → 250ms
     const displayTimes = [1000, 600, 400, 250];
     const displayTime = displayTimes[Math.min(diff,3)];
     input.value=''; input.disabled=true; input.style.opacity='0.3';
@@ -910,7 +911,9 @@ function initTyping(visitCount) {
       setTimeout(() => {
         wordEl.textContent='_';
         wordEl.style.opacity='0.15';
-        input.disabled=false; input.style.opacity='1'; input.focus();
+        input.disabled=false; input.style.opacity='1';
+        // On mobile, don't auto-focus (causes scroll jump), user taps the input
+        if (window.innerWidth > 768) input.focus();
       }, 300);
     }, displayTime);
   }
@@ -925,6 +928,7 @@ function initTyping(visitCount) {
   });
 
   msgEl.addEventListener('click', start);
+  msgEl.addEventListener('touchend', e => { e.preventDefault(); start(); }, {passive:false});
   document.getElementById('t-word')?.addEventListener('click', start);
 }
 
@@ -939,8 +943,8 @@ function renderMemoire(title) {
     <div class="game-wrap">
       <h1 class="game-title">${title||'mémoire'}</h1>
       <p class="game-score" id="m-score">paires — 0</p>
-      <div id="m-grid" style="display:grid;gap:0.5rem;margin:1rem 0;width:100%;max-width:400px"></div>
-      <p class="game-msg" id="m-msg">cliquer pour commencer</p>
+      <div id="m-grid" style="display:grid;gap:0.5rem;margin:1rem 0;width:100%;max-width:360px"></div>
+      <p class="game-msg" id="m-msg" style="cursor:pointer">appuyer pour commencer</p>
       <div class="game-search" id="memoire-search-wrap" style="display:none">
         <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
         <input class="game-search-input" id="memoire-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
@@ -953,7 +957,7 @@ function initMemoire(visitCount) {
   const diff = Math.min(visitCount||0, 3);
   const pairCounts = [4, 6, 8, 10];
   const pairs = pairCounts[diff];
-  const cols = pairs <= 4 ? 4 : pairs <= 6 ? 4 : pairs <= 8 ? 4 : 4;
+  const cols = pairs <= 4 ? 4 : 4;
 
   const grid = document.getElementById('m-grid');
   const msgEl = document.getElementById('m-msg');
@@ -962,7 +966,7 @@ function initMemoire(visitCount) {
 
   grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
-  let cards=[], flipped=[], matched=0, locked=false;
+  let flipped=[], matched=0, locked=false;
 
   const setMsg = t => { if(msgEl) msgEl.textContent=t; };
   const showSearch = () => {
@@ -972,20 +976,20 @@ function initMemoire(visitCount) {
 
   function start() {
     matched=0; flipped=[]; locked=false;
+    msgEl.style.display='none';
     const syms = MEMOIRE_SYMBOLS.slice(0,pairs);
     const deck = [...syms,...syms].sort(()=>Math.random()-0.5);
     grid.innerHTML = '';
-    cards = deck.map((sym,i) => {
+    deck.forEach(sym => {
       const el = document.createElement('div');
-      el.style.cssText = `aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.4rem;border:1px solid currentColor;opacity:0.15;cursor:pointer;transition:opacity 0.2s;user-select:none`;
+      el.style.cssText = `aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.6rem;border:1px solid currentColor;opacity:0.12;cursor:pointer;transition:opacity 0.18s;user-select:none;-webkit-tap-highlight-color:transparent`;
       el.dataset.sym = sym;
       el.dataset.revealed = '0';
-      el.textContent = ''; // hidden by default
+      el.textContent = '';
       el.addEventListener('click', () => flip(el));
       grid.appendChild(el);
-      return el;
     });
-    setMsg(''); scoreEl.textContent='paires — 0';
+    scoreEl.textContent='paires — 0';
   }
 
   function flip(el) {
@@ -997,19 +1001,20 @@ function initMemoire(visitCount) {
       locked=true;
       setTimeout(() => {
         if (flipped[0].dataset.sym===flipped[1].dataset.sym) {
-          flipped.forEach(c=>{ c.dataset.revealed='1'; c.style.opacity='0.35'; c.style.cursor='default'; });
+          flipped.forEach(c=>{ c.dataset.revealed='1'; c.style.opacity='0.3'; c.style.cursor='default'; });
           matched++;
           scoreEl.textContent=`paires — ${matched}`;
-          if (matched===pairs) { setMsg('gagné ! cherche quelque chose →'); showSearch(); }
+          if (matched===pairs) { setMsg('gagné ! cherche quelque chose →'); msgEl.style.display=''; showSearch(); }
         } else {
-          flipped.forEach(c=>{ c.style.opacity='0.15'; c.textContent=''; });
+          flipped.forEach(c=>{ c.style.opacity='0.12'; c.textContent=''; });
         }
         flipped=[]; locked=false;
-      }, 700);
+      }, 800);
     }
   }
 
   msgEl.addEventListener('click', start);
+  msgEl.addEventListener('touchend', e => { e.preventDefault(); start(); }, {passive:false});
 }
 
 // ── 2048 game
@@ -1021,9 +1026,9 @@ function render2048(title) {
     <div class="game-wrap">
       <h1 class="game-title">${title||'2048'}</h1>
       <p class="game-score" id="g2-score">score — 0</p>
-      <div id="g2-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem;width:100%;max-width:360px;margin:0.5rem 0"></div>
-      <p class="game-msg" id="g2-msg">cliquer pour commencer</p>
-      <p style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;opacity:0.28;text-align:center">flèches ou swipe pour jouer</p>
+      <div id="g2-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem;width:100%;max-width:320px;margin:0.5rem 0;touch-action:none"></div>
+      <p class="game-msg" id="g2-msg" style="cursor:pointer">appuyer pour commencer</p>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;opacity:0.28;text-align:center">flèches ou swipe</p>
       <div class="game-search" id="g2-search-wrap" style="display:none">
         <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
         <input class="game-search-input" id="g2-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
@@ -1124,15 +1129,20 @@ function init2048(visitCount) {
     if(map[e.key]){ e.preventDefault(); move(map[e.key]); }
   });
 
-  // Touch swipe
+  // Touch swipe — use document to catch swipes anywhere
   let t2=null;
-  grid.addEventListener('touchstart',e=>{t2=e.touches[0];},{passive:true});
-  grid.addEventListener('touchend',e=>{
-    if(!t2) return;
+  document.addEventListener('touchstart',e=>{
+    if(state!=='playing') return;
+    t2=e.touches[0];
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!t2||state!=='playing') return;
     const dx=e.changedTouches[0].clientX-t2.clientX;
     const dy=e.changedTouches[0].clientY-t2.clientY;
+    if(Math.abs(dx)<20&&Math.abs(dy)<20) return; // too small
     if(Math.abs(dx)>Math.abs(dy)) move(dx>0?'right':'left');
     else move(dy>0?'down':'up');
+    t2=null;
   },{passive:true});
 
   msgEl.addEventListener('click',()=>{
@@ -1141,6 +1151,13 @@ function init2048(visitCount) {
       const w=document.getElementById('g2-search-wrap'); if(w) w.style.display='none';
     }
   });
+  msgEl.addEventListener('touchend',e=>{
+    e.preventDefault();
+    if(state==='idle'||state==='won'){
+      state='playing'; newBoard(); setMsg('');
+      const w=document.getElementById('g2-search-wrap'); if(w) w.style.display='none';
+    }
+  },{passive:false});
 }
 
 // ── Audio
