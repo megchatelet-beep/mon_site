@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="/mon_site/favicon.png">
 <title>—</title>
+<link rel="icon" href="/mon_site/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
@@ -744,12 +744,17 @@ function initSnake(visitCount) {
   }
 
   function spawnFood() {
-    // Find all free cells
     const occupied = new Set(snake.map(s=>`${s.x},${s.y}`));
     const free = [];
     for(let x=0;x<COLS;x++) for(let y=0;y<ROWS;y++) if(!occupied.has(`${x},${y}`)) free.push({x,y});
-    if(free.length===0) return null; // grid full — win!
+    if(free.length===0) return null;
     return free[Math.floor(Math.random()*free.length)];
+  }
+
+  function ensureFood() {
+    if (!food || snake.some(s=>s.x===food.x&&s.y===food.y)) {
+      food = spawnFood();
+    }
   }
 
   const setMsg   = t => { const m=document.getElementById('s-msg');   if(m) m.textContent=t; };
@@ -795,9 +800,14 @@ function initSnake(visitCount) {
     }
   }, {passive:false});
 
-  function startLoop() { interval = setInterval(tick, SPEED); }
+  function startLoop() {
+    if (window._snakeInterval) clearInterval(window._snakeInterval);
+    interval = setInterval(tick, SPEED);
+    window._snakeInterval = interval;
+  }
 
   function tick() {
+    ensureFood();
     dir = nextDir;
     const head = {x: (snake[0].x+dir.x+COLS)%COLS, y: (snake[0].y+dir.y+ROWS)%ROWS};
     if (snake.some(s=>s.x===head.x&&s.y===head.y)) {
@@ -829,20 +839,17 @@ function initSnake(visitCount) {
       const gap = 2;
       ctx.fillRect(s.x*CELL+gap, s.y*CELL+gap, CELL-gap*2, CELL-gap*2);
     });
-    // Food — draw on top, bigger dot
     if (food) {
-      ctx.globalAlpha = 0.7;
+      ctx.globalAlpha = 0.6;
       ctx.fillStyle = fg;
       ctx.beginPath();
-      ctx.arc(food.x*CELL+CELL/2, food.y*CELL+CELL/2, CELL*0.32, 0, Math.PI*2);
+      ctx.arc(food.x*CELL+CELL/2, food.y*CELL+CELL/2, CELL*0.22, 0, Math.PI*2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
   }
 
   reset(); draw();
-  if (window._snakeInterval) clearInterval(window._snakeInterval);
-  window._snakeInterval = interval;
 }
 
 // ── Typing game
