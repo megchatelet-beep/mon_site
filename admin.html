@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -414,7 +414,7 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0
       </div>
 
       <!-- Title -->
-      <input type="text" id="f-title" placeholder="titre de l'entrée...">
+      <input type="text" id="f-title" placeholder="entry title...">
 
       <!-- Keywords -->
       <div style="margin-bottom:1.5rem">
@@ -518,7 +518,7 @@ function renderList() {
           ${e.category}
           ${!e.published ? `<span class="sb-item-draft">draft</span>` : ''}
         </div>
-        <div class="sb-item-title">${e.title||'(sans titre)'}</div>
+        <div class="sb-item-title">${e.title||'(untitled)'}</div>
       </div>`).join('');
 }
 
@@ -816,10 +816,10 @@ async function handleUpload(input, bid) {
   const file = input.files[0];
   if (!file) return;
   const prog = document.getElementById(`${bid}-progress`);
-  if (prog) prog.textContent = 'upload en cours...';
+  if (prog) prog.textContent = 'uploading...';
 
   if (SUPABASE_URL === 'VOTRE_URL_SUPABASE') {
-    if (prog) prog.textContent = 'Configure Supabase pour upload des images.';
+    if (prog) prog.textContent = 'Configure Supabase first.';
     return;
   }
 
@@ -837,7 +837,7 @@ async function handleUpload(input, bid) {
       if (urlInput) urlInput.value = url;
       const prev = document.getElementById(`${bid}-preview`);
       if (prev) prev.innerHTML = `<img src="${url}" alt="">`;
-      if (prog) prog.textContent = '✓ image uploadée';
+      if (prog) prog.textContent = '✓ image uploaded';
       // Switch to URL tab to show the result
       const tabs = document.querySelectorAll(`#${bid}-url-area`);
       document.getElementById(`${bid}-url-area`).style.display = '';
@@ -1000,7 +1000,7 @@ async function save() {
   // Auto-title for types without explicit title
   if (!title) {
     const base = collectBase();
-    title = base.text?.substring(0,50) || base.title || base.rtitle || '(sans titre)';
+    title = base.text?.substring(0,50) || base.title || base.rtitle || '(untitled)';
   }
 
   const payload = {
@@ -1038,7 +1038,7 @@ async function save() {
 
 // ── Delete
 async function deleteEntry() {
-  if (!confirm('Supprimer cette entrée ?')) return;
+  if (!confirm('Delete this entry?')) return;
   await fetch(`${SUPABASE_URL}/rest/v1/pages?id=eq.${curId}`, { method:'DELETE', headers:H });
   curId = null;
   blocks = [];
@@ -1066,7 +1066,7 @@ function imgSlot(i, url) {
     <div id="${id}-upload-area" style="display:none">
       <div class="img-upload-area" onclick="document.getElementById('${id}-file').click()">
         <input type="file" id="${id}-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleUpload(this,'${id}')">
-        <span>click or drag une image</span>
+        <span>click or drag an image</span>
       </div>
       <p class="upload-progress" id="${id}-progress"></p>
     </div>
@@ -1090,15 +1090,15 @@ function htmlToolbar(targetId) {
     { label:'¶',       title:'paragraphe'         },
     { label:'gras',    title:'gras'                },
     { label:'italique',title:'italique'            },
-    { label:'titre',   title:'sous-titre h2'       },
-    { label:'h3',      title:'sous-titre h3'       },
+    { label:'titre',   title:'subtitle h2'       },
+    { label:'h3',      title:'subtitle h3'       },
     { label:'espace',  title:'espace vertical'     },
     { label:'ligne',   title:'ligne fine'          },
     { label:'note',    title:'note de bas de page' },
     { label:'discret', title:'texte discret'       },
     { label:'lien',    title:'lien hypertexte'     },
-    { label:'centre',  title:'texte centré'        },
-    { label:'droite',  title:'texte à droite'      },
+    { label:'centre',  title:'centered text'        },
+    { label:'droite',  title:'right-aligned text'      },
     { label:'grand',   title:'texte grand'         },
     { label:'petit',   title:'texte petit'         },
   ];
@@ -1168,7 +1168,7 @@ function buildPreviewHTML(d) {
   const entry = JSON.stringify(d).replace(/</g,'\\u003c').replace(/>/g,'\\u003e');
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>aperçu</title>
+<title>preview</title>
 <script>
 window._previewEntry = ${entry};
 window._isPreview = true;
@@ -1190,7 +1190,7 @@ async function handleAudioUpload(input) {
   const file = input.files[0];
   if (!file) return;
   const prog = document.getElementById('b-audio-progress');
-  if (prog) prog.textContent = 'upload en cours...';
+  if (prog) prog.textContent = 'uploading...';
   const ext  = file.name.split('.').pop();
   const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   try {
@@ -1203,7 +1203,7 @@ async function handleAudioUpload(input) {
       const url = `${SUPABASE_URL}/storage/v1/object/public/audio/${name}`;
       const urlInput = document.getElementById('b-audio-url');
       if (urlInput) urlInput.value = url;
-      if (prog) prog.textContent = '✓ audio uploadé';
+      if (prog) prog.textContent = '✓ audio uploaded';
       document.getElementById('b-audio-url-area').style.display = '';
       document.getElementById('b-audio-upload-area').style.display = 'none';
       // Switch tab visually
