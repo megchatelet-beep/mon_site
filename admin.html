@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:      #f5f0e8;
+  --bg2:     #ede8df;
+  --bg3:     #e6e0d6;
+  --fg:      #1c1810;
+  --muted:   rgba(28,24,16,0.38);
+  --border:  rgba(28,24,16,0.13);
+  --input:   #faf6ee;
+  --danger:  #9e3a3a;
+  --success: #2e6e3e;
+}
+
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem; line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ══ LOGIN ═══════════════════════════════════════════ */
+#login {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 1.2rem;
+  background: var(--bg); z-index: 100; transition: opacity 0.35s ease;
+}
+#login.out { opacity: 0; pointer-events: none; }
+.login-label { font-size: 0.58rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--muted); }
+#pw {
+  background: var(--input); border: 1px solid var(--border);
+  color: var(--fg); font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem; letter-spacing: 0.15em;
+  padding: 0.6rem 1rem; width: 230px; text-align: center; outline: none;
+  transition: border-color 0.2s;
+}
+#pw:focus { border-color: rgba(28,24,16,0.4); }
+#login-err { font-size: 0.58rem; color: var(--danger); height: 0.9rem; }
+#login-btn {
+  background: var(--fg); color: var(--bg);
+  border: none; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.25em; text-transform: lowercase;
+  padding: 0.6rem 1.6rem; cursor: pointer; transition: opacity 0.2s;
+}
+#login-btn:hover { opacity: 0.78; }
+
+/* ══ APP ═════════════════════════════════════════════ */
+#app { display: none; min-height: 100vh; }
+#app.on { display: flex; }
+
+/* ── Sidebar ── */
+#sidebar {
+  width: 200px; flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+}
+
+.sb-top { padding: 1.6rem 1.4rem 1rem; border-bottom: 1px solid var(--border); }
+.sb-site { font-size: 0.56rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
+#sb-search {
+  width: 100%; background: var(--input);
+  border: 1px solid var(--border); color: var(--fg);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+  padding: 0.4rem 0.6rem; outline: none;
+}
+#sb-search:focus { border-color: rgba(28,24,16,0.3); }
+
+.cat-row { display: flex; flex-wrap: wrap; gap: 0.3rem; padding: 0.7rem 1.4rem; border-bottom: 1px solid var(--border); }
+.cat-btn {
+  font-size: 0.5rem; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.18rem 0.45rem; border: 1px solid var(--border);
+  background: none; color: var(--muted); cursor: pointer; transition: all 0.15s;
+}
+.cat-btn:hover, .cat-btn.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+
+.sb-list { flex: 1; overflow-y: auto; }
+.sb-list::-webkit-scrollbar { width: 2px; }
+.sb-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+.sb-item {
+  padding: 0.75rem 1.4rem; cursor: pointer;
+  border-left: 2px solid transparent;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s, border-color 0.12s;
+}
+.sb-item:hover { background: rgba(28,24,16,0.04); }
+.sb-item.on { border-left-color: var(--fg); background: rgba(28,24,16,0.06); }
+.sb-item-cat {
+  font-size: 0.5rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.18rem;
+}
+.cat-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.cat-dot.essais   { background: #b8a882; }
+.cat-dot.création { background: #6a7a9a; }
+.cat-dot.notes    { background: #7a9a80; }
+.cat-dot.wip      { background: #b88a8a; }
+.sb-item-draft { font-size: 0.46rem; color: var(--muted); margin-left: auto; }
+.sb-item-title { font-size: 0.66rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.sb-new {
+  margin: 0.9rem 1.4rem;
+  background: var(--fg); color: var(--bg);
+  border: none; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem; letter-spacing: 0.2em; text-transform: lowercase;
+  padding: 0.6rem 0; cursor: pointer; width: calc(100% - 2.8rem);
+  transition: opacity 0.2s; text-align: center;
+}
+.sb-new:hover { opacity: 0.8; }
+
+/* ── Main ── */
+#main { flex: 1; overflow-y: auto; }
+
+#empty {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; flex-direction: column; gap: 0.6rem; opacity: 0.3;
+}
+#empty p { font-size: 0.62rem; }
+#empty span { font-size: 0.56rem; font-style: italic; }
+
+#editor { display: none; max-width: 680px; padding: 2.8rem 3.5rem 5rem; }
+
+/* Entry top bar */
+.entry-bar {
+  display: flex; align-items: center; gap: 0.8rem;
+  margin-bottom: 2rem; padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.entry-bar select {
+  background: var(--input); border: 1px solid var(--border);
+  color: var(--fg); font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem; padding: 0.35rem 0.6rem; outline: none;
+  cursor: pointer; appearance: none;
+}
+.entry-bar select:focus { border-color: rgba(28,24,16,0.35); }
+
+/* Draft toggle */
+.draft-toggle { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
+.draft-toggle label { font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
+.toggle-wrap { position: relative; width: 32px; height: 17px; }
+.toggle-wrap input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; margin: 0; }
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: var(--border); cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute;
+  width: 11px; height: 11px; background: var(--bg);
+  top: 3px; left: 3px;
+  transition: transform 0.2s;
+}
+.toggle-wrap input:checked + .toggle-slider { background: var(--fg); }
+.toggle-wrap input:checked + .toggle-slider::before { transform: translateX(15px); }
+
+/* Title */
+#f-title {
+  width: 100%; background: none; border: none;
+  color: var(--fg); font-family: 'Lora', serif;
+  font-size: 1.4rem; font-style: italic; font-weight: 400;
+  outline: none; padding: 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem; margin-bottom: 2rem;
+  transition: border-color 0.2s;
+}
+#f-title:focus { border-color: rgba(28,24,16,0.4); }
+#f-title::placeholder { color: var(--muted); }
+
+/* Sections */
+.section-label {
+  font-size: 0.52rem; letter-spacing: 0.35em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 1rem; margin-top: 2rem;
+}
+
+/* Base fields */
+#base-fields { margin-bottom: 0; }
+
+.field-row { margin-bottom: 1.3rem; }
+.field-row label {
+  display: block; font-size: 0.54rem; letter-spacing: 0.28em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 0.45rem;
+}
+.field-row input[type="text"],
+.field-row input[type="url"],
+.field-row input[type="number"],
+.field-row textarea,
+.field-row select {
+  width: 100%; background: var(--input);
+  border: 1px solid var(--border); color: var(--fg);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  padding: 0.6rem 0.8rem; outline: none; transition: border-color 0.2s;
+  appearance: none;
+}
+.field-row input:focus,
+.field-row textarea:focus,
+.field-row select:focus { border-color: rgba(28,24,16,0.38); }
+.field-row textarea { resize: vertical; min-height: 120px; line-height: 1.75; }
+.field-hint { font-size: 0.56rem; color: var(--muted); margin-top: 0.4rem; font-style: italic; line-height: 1.5; }
+.fn-hint { font-size: 0.56rem; color: var(--muted); margin-top: 0.5rem; border-left: 2px solid var(--border); padding-left: 0.7rem; line-height: 1.6; font-style: italic; }
+
+.sel-wrap { position: relative; }
+.sel-wrap::after { content: '↓'; position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+
+/* Tags */
+.tags-wrap { display: flex; flex-direction: column; gap: 0.4rem; }
+.tag-row { display: flex; gap: 0.4rem; }
+.tag-row input { flex: 1; }
+.tag-rm {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+  padding: 0 0.6rem; cursor: pointer; transition: all 0.12s;
+}
+.tag-rm:hover { border-color: var(--danger); color: var(--danger); }
+.tag-add {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.15em; padding: 0.4rem 0.8rem; cursor: pointer;
+  align-self: flex-start; margin-top: 0.25rem; transition: all 0.12s;
+}
+.tag-add:hover { color: var(--fg); border-color: rgba(28,24,16,0.3); }
+
+/* Range */
+.range-row { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
+.range-row input { flex: 1; accent-color: var(--fg); }
+.range-val { font-size: 0.62rem; color: var(--muted); min-width: 2.5rem; }
+
+/* ══ BLOCKS ══════════════════════════════════════════ */
+#blocks-area { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.2rem; }
+
+.block {
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  position: relative;
+}
+.block-header {
+  display: flex; align-items: center;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3); gap: 0.5rem;
+}
+.block-type-label { font-size: 0.5rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); flex: 1; }
+.block-actions { display: flex; gap: 0.3rem; }
+.block-btn {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.58rem;
+  width: 22px; height: 22px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.block-btn:hover { background: var(--bg); color: var(--fg); }
+.block-btn.del:hover { border-color: var(--danger); color: var(--danger); }
+.block-body { padding: 0.9rem; }
+
+/* Block fields */
+.block-body input[type="text"],
+.block-body input[type="url"],
+.block-body textarea {
+  width: 100%; background: var(--input);
+  border: 1px solid var(--border); color: var(--fg);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  padding: 0.55rem 0.75rem; outline: none; transition: border-color 0.2s;
+}
+.block-body input:focus,
+.block-body textarea:focus { border-color: rgba(28,24,16,0.35); }
+.block-body textarea { resize: vertical; min-height: 100px; line-height: 1.75; width: 100%; }
+.block-body label { display: block; font-size: 0.52rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; margin-top: 0.7rem; }
+.block-body label:first-child { margin-top: 0; }
+
+/* Image upload */
+.img-tabs { display: flex; gap: 0; margin-bottom: 0.7rem; }
+.img-tab {
+  font-size: 0.54rem; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.3rem 0.7rem; border: 1px solid var(--border);
+  background: none; color: var(--muted); cursor: pointer; transition: all 0.12s;
+}
+.img-tab:first-child { border-right: none; }
+.img-tab.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.img-upload-area {
+  border: 1px dashed var(--border); padding: 1.2rem;
+  text-align: center; cursor: pointer; transition: border-color 0.2s;
+  position: relative;
+}
+.img-upload-area:hover { border-color: rgba(28,24,16,0.35); }
+.img-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.img-upload-area span { font-size: 0.6rem; color: var(--muted); font-style: italic; }
+.img-preview { margin-top: 0.6rem; }
+.img-preview img { max-width: 100%; max-height: 160px; object-fit: cover; display: block; }
+.upload-progress { font-size: 0.58rem; color: var(--muted); margin-top: 0.4rem; font-style: italic; }
+
+/* ── Add block buttons ── */
+.add-blocks { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+.add-block-btn {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.15em; text-transform: lowercase;
+  padding: 0.45rem 0.9rem; cursor: pointer; transition: all 0.15s;
+}
+.add-block-btn:hover { color: var(--fg); border-color: rgba(28,24,16,0.35); background: var(--bg2); }
+
+/* ── Actions ── */
+.editor-actions {
+  display: flex; align-items: center; gap: 0.8rem;
+  padding-top: 1.4rem; border-top: 1px solid var(--border);
+}
+.btn-save {
+  background: var(--fg); color: var(--bg);
+  border: none; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.2em; text-transform: lowercase;
+  padding: 0.65rem 1.6rem; cursor: pointer; transition: opacity 0.2s;
+}
+.btn-save:hover { opacity: 0.8; }
+.btn-save:disabled { opacity: 0.3; cursor: default; }
+.btn-preview {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.15em; padding: 0.6rem 1.1rem; cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-preview:hover { color: var(--fg); border-color: rgba(28,24,16,0.3); }
+.save-msg { font-size: 0.6rem; color: var(--success); opacity: 0; transition: opacity 0.3s; }
+.save-msg.on { opacity: 1; }
+.btn-del {
+  margin-left: auto; background: none; border: 1px solid var(--border);
+  color: var(--muted); font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem; letter-spacing: 0.12em;
+  padding: 0.55rem 1rem; cursor: pointer; transition: all 0.15s;
+}
+.btn-del:hover { color: var(--danger); border-color: var(--danger); }
+
+hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0; }
+
+/* HTML toolbar */
+.html-toolbar { display:flex; gap:0.3rem; flex-wrap:wrap; margin-bottom:0.4rem; }
+.html-btn {
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--muted); font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem; padding: 0.25rem 0.5rem; cursor: pointer;
+  transition: all 0.12s; letter-spacing: 0.05em;
+}
+.html-btn:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login">
+  <p class="login-label">admin</p>
+  <input type="password" id="pw" placeholder="mot de passe">
+  <p id="login-err"></p>
+  <button id="login-btn" onclick="login()">entrer</button>
+</div>
+
+<!-- App -->
+<div id="app">
+  <aside id="sidebar">
+    <div class="sb-top">
+      <p class="sb-site">my site</p>
+      <input type="text" id="sb-search" placeholder="search..." oninput="renderList()">
+    </div>
+    <div class="cat-row" id="cat-row">
+      <button class="cat-btn on" data-c="" onclick="setFilter(this,'')">all</button>
+      <button class="cat-btn" data-c="essais" onclick="setFilter(this,'essais')">writing</button>
+      <button class="cat-btn" data-c="création" onclick="setFilter(this,'création')">making</button>
+      <button class="cat-btn" data-c="notes" onclick="setFilter(this,'notes')">note</button>
+      <button class="cat-btn" data-c="wip" onclick="setFilter(this,'wip')">wip</button>
+      <button class="cat-btn" data-c="jeu" onclick="setFilter(this,'jeu')">play</button>
+    </div>
+    <div class="sb-list" id="sb-list"></div>
+    <button class="sb-new" onclick="newEntry()">+ new entry</button>
+  </aside>
+
+  <main id="main">
+    <div id="empty">
+      <p>no entry selected</p>
+      <span>click on an entry or create a new one</span>
+    </div>
+
+    <div id="editor">
+      <!-- Top bar -->
+      <div class="entry-bar">
+        <div class="sel-wrap">
+          <select id="f-cat" onchange="onCatChange()">
+            <option value="essais">writing</option>
+            <option value="création">making</option>
+            <option value="notes">note</option>
+            <option value="wip">wip</option>
+            <option value="jeu">play</option>
+          </select>
+        </div>
+        <div class="sel-wrap">
+          <select id="f-type" onchange="renderBaseFields()">
+            <option value="essay">essai</option>
+          </select>
+        </div>
+        <div class="draft-toggle">
+          <label for="f-published">published</label>
+          <div class="toggle-wrap">
+            <input type="checkbox" id="f-published" checked>
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <input type="text" id="f-title" placeholder="entry title...">
+
+      <!-- Keywords -->
+      <div style="margin-bottom:1.5rem">
+        <label style="display:block;font-size:0.54rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem">keywords (hidden on site, for search)</label>
+        <div class="tags-wrap" id="keywords-wrap"></div>
+        <button class="tag-add" onclick="addKeyword()" style="margin-top:0.3rem">+ keyword</button>
+      </div>
+      <p class="section-label">main content</p>
+      <div id="base-fields"></div>
+
+      <hr class="divider">
+
+      <!-- Blocks -->
+      <p class="section-label">additional blocks</p>
+      <div id="blocks-area"></div>
+      <div class="add-blocks">
+        <button class="add-block-btn" onclick="addBlock('text')">+ text</button>
+        <button class="add-block-btn" onclick="addBlock('image')">+ image</button>
+        <button class="add-block-btn" onclick="addBlock('video')">+ video vimeo</button>
+        <button class="add-block-btn" onclick="addBlock('audio')">+ audio</button>
+      </div>
+
+      <!-- Actions -->
+      <div class="editor-actions">
+        <button class="btn-save" id="save-btn" onclick="save()">save</button>
+        <button class="btn-preview" onclick="previewEntry()">preview ↗</button>
+        <span class="save-msg" id="save-msg">✓ saved</span>
+        <button class="btn-del" id="del-btn" onclick="deleteEntry()" style="display:none">delete</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  ⚙️  CONFIG
+// ═══════════════════════════════════════════════════
+const SUPABASE_URL   = 'https://xmppjkvipqdidqahmhec.supabase.co';
+const SUPABASE_KEY   = 'sb_publishable_EyGTa_9-6zTgl_geANgtqQ_a3ZUunF0';
+const ADMIN_PASSWORD = 'couettes';
+// ═══════════════════════════════════════════════════
+
+const H = {
+  'Content-Type': 'application/json',
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Prefer': 'return=representation'
+};
+
+// ── State
+let entries   = [];
+let curId     = null;
+let catFilter = '';
+let blocks    = [];   // [{id, type, data}]
+let blockCtr  = 0;
+
+// ── Login
+document.getElementById('pw').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
+function login() {
+  if (document.getElementById('pw').value === ADMIN_PASSWORD) {
+    document.getElementById('login').classList.add('out');
+    document.getElementById('app').classList.add('on');
+    loadEntries();
+  } else {
+    const err = document.getElementById('login-err');
+    err.textContent = 'incorrect password';
+    setTimeout(() => err.textContent = '', 2000);
+  }
+}
+
+// ── Load entries
+async function loadEntries() {
+  if (SUPABASE_URL === 'VOTRE_URL_SUPABASE') { entries = []; renderList(); return; }
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/pages?select=id,category,type,title,published,created_at&order=created_at.desc`, { headers: H });
+    entries = await r.json();
+  } catch { entries = []; }
+  renderList();
+}
+
+// ── Sidebar list
+function setFilter(btn, cat) {
+  catFilter = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderList();
+}
+function renderList() {
+  const q = (document.getElementById('sb-search')?.value||'').toLowerCase();
+  const list = entries.filter(e => {
+    if (catFilter && e.category !== catFilter) return false;
+    if (q && !(e.title||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('sb-list').innerHTML = list.length === 0
+    ? `<div style="padding:1.2rem 1.4rem;font-size:0.6rem;color:var(--muted);font-style:italic">no entries</div>`
+    : list.map(e => `
+      <div class="sb-item ${e.id===curId?'on':''}" onclick="openEntry('${e.id}')">
+        <div class="sb-item-cat">
+          <span class="cat-dot ${e.category}"></span>
+          ${e.category}
+          ${!e.published ? `<span class="sb-item-draft">draft</span>` : ''}
+        </div>
+        <div class="sb-item-title">${e.title||'(untitled)'}</div>
+      </div>`).join('');
+}
+
+// ── Open entry
+async function openEntry(id) {
+  curId = id;
+  renderList();
+  if (SUPABASE_URL === 'VOTRE_URL_SUPABASE') { alert('Configure Supabase d\'abord.'); return; }
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/pages?id=eq.${id}&select=*`, { headers: H });
+  const data = await r.json();
+  loadEditor(data[0]);
+}
+
+// ── New entry
+function newEntry() {
+  curId = null;
+  renderList();
+  loadEditor(null);
+}
+
+// ── Load editor
+function loadEditor(d) {
+  document.getElementById('empty').style.display = 'none';
+  document.getElementById('editor').style.display = 'block';
+  document.getElementById('del-btn').style.display = d ? 'block' : 'none';
+
+  const cat  = d?.category || 'notes';
+  const type = d?.type     || 'thought';
+
+  document.getElementById('f-cat').value = cat;
+  document.getElementById('f-type').innerHTML = typeOptions(cat, type);
+  document.getElementById('f-type').value = type;
+  document.getElementById('f-title').value = d?.title || '';
+  document.getElementById('f-published').checked = d?.published !== false;
+
+  // Load keywords
+  const kwWrap = document.getElementById('keywords-wrap');
+  kwWrap.innerHTML = '';
+  const keywords = d?.content?.base?.keywords || d?.content?.keywords || [];
+  keywords.forEach(k => addKeyword(k));
+  if (keywords.length === 0) addKeyword(); // start with one empty slot
+
+  // Load blocks
+  blocks = (d?.content?.blocks || []).map(b => ({ id: blockCtr++, ...b }));
+  renderBaseFields(d?.content?.base || {});
+  renderBlocks();
+}
+
+// ── Type options per category
+function typeOptions(cat, sel) {
+  const map = {
+    essais:   ['essay', 'fiction', 'poeme', 'libre'],
+    création: ['video','audio','image','bd','projet','libre'],
+    notes:    ['thought','citation','lien','recommendation','musique','recipe','libre'],
+    wip:      ['wip','libre'],
+    jeu:      ['jeu','snake','typing','memoire','jeu2048'],
+  };
+  const labels = {
+    essay:'essay', fiction:'fiction', poeme:'poetry', video:'video (vimeo)', audio:'audio',
+    image:'image / photo', bd:'comic', projet:'project',
+    thought:'thought', citation:'quote', lien:'link', recommendation:'recommendation',
+    musique:'music', recipe:'recipe', wip:'wip', jeu:'brick breaker', snake:'snake',
+    typing:'typing', memoire:'memory', jeu2048:'2048', libre:'free (blocks only)'
+  };
+  return (map[cat]||['thought']).map(t =>
+    `<option value="${t}" ${t===sel?'selected':''}>${labels[t]||t}</option>`
+  ).join('');
+}
+
+function onCatChange() {
+  const cat = document.getElementById('f-cat').value;
+  document.getElementById('f-type').innerHTML = typeOptions(cat, '');
+  renderBaseFields({});
+}
+
+// ── Base fields
+function renderBaseFields(saved = null) {
+  const type = document.getElementById('f-type').value;
+  const c = saved !== null ? saved : getBaseSaved();
+  const cont = document.getElementById('base-fields');
+
+  const inp  = (id, val='', ph='') => `<input type="text" id="${id}" value="${esc(val)}" placeholder="${ph}">`;
+  const inpu = (id, val='', ph='') => `<input type="url" id="${id}" value="${esc(val)}" placeholder="${ph}">`;
+  const ta   = (id, val='', h=120) => `<textarea id="${id}" style="min-height:${h}px">${esc(val)}</textarea>`;
+  const fnH  = `<p class="fn-hint">Footnote: <code>&lt;sup class="fn" data-note="your note"&gt;1&lt;/sup&gt;</code></p>`;
+  const hint = t => `<p class="field-hint">${t}</p>`;
+
+  if (type === 'essay') {
+    cont.innerHTML = `
+      <div class="field-row"><label>main text</label>
+      ${htmlToolbar('b-body')}
+      ${ta('b-body', c.body||'', 200)}
+      ${fnH}</div>`;
+  }
+  else if (type === 'fiction') {
+    cont.innerHTML = `
+      <div class="field-row"><label>genre (optional)</label>${inp('b-genre', c.genre||'', 'short story, novel...')}</div>
+      <div class="field-row"><label>text</label>
+      ${htmlToolbar('b-body')}
+      ${ta('b-body', c.body||'', 220)}</div>`;
+  }
+  else if (type === 'video') {
+    cont.innerHTML = `
+      <div class="field-row"><label>Vimeo ID</label>${inp('b-vimeo', c.vimeo_id||'', 'ex: 148751763')}
+      ${hint("The ID is in the URL: vimeo.com/<strong>148751763</strong>")}</div>
+      <div class="field-row"><label>description (optional)</label>${inp('b-desc', c.description||'')}</div>`;
+  }
+  else if (type === 'audio') {
+    const ablocks = c.ablocks || [];
+    cont.innerHTML = `
+      <div class="field-row">
+        <label>content — add audio, images or text in any order</label>
+        <div id="ablocks-area">${ablocks.map((b,i) => audioBlock(i, b)).join('')}</div>
+        <div style="display:flex;gap:0.5rem;margin-top:0.8rem;flex-wrap:wrap">
+          <button class="tag-add" onclick="addAudioBlock('audio')">+ audio</button>
+          <button class="tag-add" onclick="addAudioBlock('image')">+ image</button>
+          <button class="tag-add" onclick="addAudioBlock('text')">+ text</button>
+        </div>
+      </div>`;
+  }
+  else if (type === 'image') {
+    const imgs = c.images||[''];
+    cont.innerHTML = `
+      <div class="field-row">
+        <label>images — add as many as you want</label>
+        <div id="img-slots">${imgs.map((url,i) => imgSlot(i, url)).join('')}</div>
+        <button class="tag-add" onclick="addImgSlot()" style="margin-top:0.5rem">+ add image</button>
+        <p class="field-hint">The grid adapts automatically to the number of images and screen size.</p>
+      </div>
+      <div class="field-row"><label>caption (optional)</label>${inp('b-caption', c.caption||'')}</div>`;
+  }
+  else if (type === 'bd') {
+    const imgs = c.images||[''];
+    cont.innerHTML = `
+      <div class="field-row"><label>pages (one URL per image)</label>
+        <div class="tags-wrap" id="bd-wrap">${imgs.map((v,i)=>tagRow('bd',i,v)).join('')}</div>
+        <button class="tag-add" onclick="addTag('bd','bd-wrap')">+ page</button>
+      </div>
+      <div class="field-row"><label>note (optional)</label>${inp('b-note', c.note||'')}</div>`;
+  }
+  else if (type === 'projet') {
+    cont.innerHTML = `
+      <div class="field-row"><label>tags (comma separated)</label>${inp('b-tags', (c.tags||[]).join(', '), 'photography, archive...')}</div>
+      <div class="field-row"><label>description</label>${htmlToolbar('b-desc')}${ta('b-desc', c.description||'')}</div>
+      <div class="field-row"><label>external link (optional)</label>${inpu('b-link', c.link||'', 'https://...')}</div>`;
+  }
+  else if (type === 'thought') {
+    cont.innerHTML = `
+      <div class="field-row"><label>thought</label>${htmlToolbar('b-text')}${ta('b-text', c.text||'', 90)}</div>
+      <div class="field-row"><label>context (optional)</label>${inp('b-meta', c.meta||'', 'on the metro, 11pm...')}</div>`;
+  }
+  else if (type === 'citation') {
+    cont.innerHTML = `
+      <div class="field-row"><label>quote</label>${htmlToolbar('b-text')}${ta('b-text', c.text||'', 90)}</div>
+      <div class="field-row"><label>source</label>${inp('b-source', c.source||'', 'Albert Camus — The Stranger')}</div>`;
+  }
+  else if (type === 'lien') {
+    cont.innerHTML = `
+      <div class="field-row"><label>URL</label>${inpu('b-url', c.url||'', 'https://...')}</div>
+      <div class="field-row"><label>page title</label>${inp('b-ltitle', c.title||'')}</div>
+      <div class="field-row"><label>your comment</label>${htmlToolbar('b-comment')}${ta('b-comment', c.comment||'')}</div>`;
+  }
+  else if (type === 'recommendation') {
+    const kinds = ['film','book','music','podcast','series','article','game','exhibition'];
+    cont.innerHTML = `
+      <div class="field-row"><label>type</label>
+        <div class="sel-wrap"><select id="b-kind">${kinds.map(k=>`<option value="${k}" ${(c.kind||'film')===k?'selected':''}>${k}</option>`).join('')}</select></div>
+      </div>
+      <div class="field-row"><label>title</label>${inp('b-rtitle', c.title||'')}</div>
+      <div class="field-row"><label>author / year</label>${inp('b-author', c.author||'', 'ex: Chantal Akerman, 1975')}</div>
+      <div class="field-row"><label>why you recommend it</label>${htmlToolbar('b-rdesc')}${ta('b-rdesc', c.description||'')}</div>`;
+  }
+  else if (type === 'poeme') {
+    cont.innerHTML = `
+      <div class="field-row"><label>title (optional)</label>${inp('b-ptitle', c.title||'')}</div>
+      <div class="field-row"><label>text — line breaks are preserved</label>${htmlToolbar('b-body')}${ta('b-body', c.body||'', 180)}</div>`;
+  }
+  else if (type === 'musique') {
+    cont.innerHTML = `
+      <div class="field-row"><label>title</label>
+        ${inp('b-mus-title', c.title||'', 'ex: Only God Was Above Us')}
+      </div>
+      <div class="field-row"><label>artist (optional)</label>
+        ${inp('b-mus-artist', c.artist||'', 'ex: Vampire Weekend')}
+      </div>
+      ${imageField('b-mus-img', c.image_url||'')}
+      <div class="field-row"><label>SoundCloud embed URL</label>
+        ${inp('b-sc-url', c.sc_url||'', 'https://w.soundcloud.com/player/?url=...')}
+        <p class="field-hint">On SoundCloud → Share → Embed → copy the URL from src="..."</p>
+      </div>
+      <div class="field-row"><label>note (optional)</label>
+        ${inp('b-mus-note', c.note||'')}
+      </div>`;
+  }
+  else if (type === 'recipe') {
+    const ings  = c.ingredients||[''];
+    const steps = c.steps||[''];
+    cont.innerHTML = `
+      <div class="field-row"><label>serves / duration</label>${inp('b-serves', c.serves||'', '2 people — 30 min')}</div>
+      <div class="field-row"><label>ingredients</label>
+        <div class="tags-wrap" id="ings-wrap">${ings.map((v,i)=>tagRow('ing',i,v)).join('')}</div>
+        <button class="tag-add" onclick="addTag('ing','ings-wrap')">+ ingredient</button>
+      </div>
+      <div class="field-row"><label>steps</label>
+        <div class="tags-wrap" id="steps-wrap">${steps.map((v,i)=>tagRow('step',i,v)).join('')}</div>
+        <button class="tag-add" onclick="addTag('step','steps-wrap')">+ step</button>
+      </div>`;
+  }
+  else if (type === 'typing') {
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">The typing game is generated automatically — nothing to configure!</p>`;
+  }
+  else if (type === 'memoire') {
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">The memory game is generated automatically — nothing to configure!</p>`;
+  }
+  else if (type === 'jeu2048') {
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">The 2048 game is generated automatically — nothing to configure!</p>`;
+  }
+  else if (type === 'snake') {
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">The snake game is generated automatically — nothing to configure!</p>`;
+  }
+  else if (type === 'libre') {
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">No main content — add blocks below.</p>`;
+  }
+  else if (type === 'jeu') {
+    cont.innerHTML = `
+      <div class="field-row"><label>subtitle (optional)</label>
+        <input type="text" id="b-subtitle" value="${esc(c.subtitle||'')}" placeholder="ex: brick breaker">
+      </div>
+      <p class="field-hint" style="margin-top:-0.5rem">The game is generated automatically — nothing else to configure!</p>`;
+  }
+  else if (type === 'wip') {
+    const prog = c.progress||0;
+    cont.innerHTML = `
+      <div class="field-row"><label>status</label>${inp('b-status', c.status||'', 'in progress for 3 months...')}</div>
+      <div class="field-row"><label>description</label>${htmlToolbar('b-body')}${ta('b-body', c.body||'')}</div>
+      <div class="field-row"><label>progress</label>
+        <div class="range-row">
+          <input type="range" id="b-progress" min="0" max="100" value="${prog}"
+            oninput="document.getElementById('rv').textContent=this.value+'%'">
+          <span class="range-val" id="rv">${prog}%</span>
+        </div>
+      </div>`;
+  }
+}
+
+// ── Image field helper (URL + upload tabs)
+function imageField(inputId, currentUrl, blockIdx=null) {
+  const bid = blockIdx !== null ? `blk-${blockIdx}` : inputId;
+  return `
+    <div class="field-row">
+      <label>image</label>
+      <div class="img-tabs">
+        <button class="img-tab on" onclick="switchImgTab(this,'url','${bid}')">paste URL</button>
+        <button class="img-tab" onclick="switchImgTab(this,'upload','${bid}')">upload</button>
+      </div>
+      <div id="${bid}-url-area">
+        <input type="url" id="${bid}-url" value="${esc(currentUrl)}" placeholder="https://..." oninput="previewImg('${bid}')">
+      </div>
+      <div id="${bid}-upload-area" style="display:none">
+        <div class="img-upload-area" onclick="document.getElementById('${bid}-file').click()">
+          <input type="file" id="${bid}-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleUpload(this,'${bid}')">
+          <span>click or drag a file</span>
+        </div>
+        <p class="upload-progress" id="${bid}-progress"></p>
+      </div>
+      <div class="img-preview" id="${bid}-preview">
+        ${currentUrl ? `<img src="${esc(currentUrl)}" alt="">` : ''}
+      </div>
+    </div>`;
+}
+
+function switchImgTab(btn, mode, bid) {
+  btn.parentElement.querySelectorAll('.img-tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById(`${bid}-url-area`).style.display   = mode==='url'    ? '' : 'none';
+  document.getElementById(`${bid}-upload-area`).style.display = mode==='upload' ? '' : 'none';
+}
+
+function previewImg(bid) {
+  const url = document.getElementById(`${bid}-url`)?.value;
+  const prev = document.getElementById(`${bid}-preview`);
+  if (prev) prev.innerHTML = url ? `<img src="${url}" alt="">` : '';
+}
+
+async function handleUpload(input, bid) {
+  const file = input.files[0];
+  if (!file) return;
+  const prog = document.getElementById(`${bid}-progress`);
+  if (prog) prog.textContent = 'uploading...';
+
+  if (SUPABASE_URL === 'VOTRE_URL_SUPABASE') {
+    if (prog) prog.textContent = 'Configure Supabase first.';
+    return;
+  }
+
+  const ext  = file.name.split('.').pop();
+  const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/images/${name}`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': file.type },
+      body: file
+    });
+    if (r.ok) {
+      const url = `${SUPABASE_URL}/storage/v1/object/public/images/${name}`;
+      const urlInput = document.getElementById(`${bid}-url`);
+      if (urlInput) urlInput.value = url;
+      const prev = document.getElementById(`${bid}-preview`);
+      if (prev) prev.innerHTML = `<img src="${url}" alt="">`;
+      if (prog) prog.textContent = '✓ image uploaded';
+      // Switch to URL tab to show the result
+      const tabs = document.querySelectorAll(`#${bid}-url-area`);
+      document.getElementById(`${bid}-url-area`).style.display = '';
+      document.getElementById(`${bid}-upload-area`).style.display = 'none';
+    } else {
+      if (prog) prog.textContent = 'upload error — check Supabase Storage bucket';
+    }
+  } catch(e) {
+    if (prog) prog.textContent = 'upload error';
+  }
+}
+
+// ── Tag rows
+function tagRow(prefix, idx, val) {
+  return `<div class="tag-row" id="${prefix}-row-${idx}">
+    <input type="text" class="${prefix}-input" value="${esc(val)}">
+    <button class="tag-rm" onclick="document.getElementById('${prefix}-row-${idx}').remove()">×</button>
+  </div>`;
+}
+function addTag(prefix, wrapId) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  const idx = wrap.children.length;
+  const d = document.createElement('div');
+  d.innerHTML = tagRow(prefix, idx, '');
+  wrap.appendChild(d.firstElementChild);
+}
+
+// ══ BLOCKS ══════════════════════════════════════════
+
+function addBlock(type, data={}) {
+  blocks.push({ id: blockCtr++, type, data });
+  renderBlocks();
+}
+
+function removeBlock(id) {
+  blocks = blocks.filter(b => b.id !== id);
+  renderBlocks();
+}
+
+function moveBlock(id, dir) {
+  const i = blocks.findIndex(b => b.id === id);
+  if (dir === -1 && i === 0) return;
+  if (dir === 1 && i === blocks.length-1) return;
+  const tmp = blocks[i];
+  blocks[i] = blocks[i+dir];
+  blocks[i+dir] = tmp;
+  renderBlocks();
+}
+
+function renderBlocks() {
+  const area = document.getElementById('blocks-area');
+  if (blocks.length === 0) { area.innerHTML = ''; return; }
+
+  area.innerHTML = blocks.map((b, i) => {
+    const labels = { text:'free text', image:'image', video:'video vimeo', audio:'audio' };
+    return `
+      <div class="block" id="block-${b.id}">
+        <div class="block-header">
+          <span class="block-type-label">${labels[b.type]||b.type}</span>
+          <div class="block-actions">
+            <button class="block-btn" onclick="moveBlock(${b.id},-1)" title="monter">↑</button>
+            <button class="block-btn" onclick="moveBlock(${b.id},1)" title="descendre">↓</button>
+            <button class="block-btn del" onclick="removeBlock(${b.id})" title="delete">×</button>
+          </div>
+        </div>
+        <div class="block-body">${blockFields(b)}</div>
+      </div>`;
+  }).join('');
+}
+
+function blockFields(b) {
+  const d = b.data || {};
+  const bid = `blk-${b.id}`;
+  if (b.type === 'text') {
+    return `<textarea id="${bid}-html" placeholder="texte HTML libre...">${esc(d.html||'')}</textarea>
+      ${htmlToolbar(`${bid}-html`)}`;
+  }
+  if (b.type === 'image') {
+    return imageField(`${bid}-img`, d.url||'', b.id) +
+      `<div class="field-row" style="margin-top:0.7rem"><label>caption (optional)</label><input type="text" id="${bid}-caption" value="${esc(d.caption||'')}"></div>`;
+  }
+  if (b.type === 'video') {
+    return `<label>ID Vimeo</label><input type="text" id="${bid}-vimeo" value="${esc(d.vimeo_id||'')}" placeholder="ex: 148751763">
+      <label style="margin-top:0.7rem">description (optionnel)</label><input type="text" id="${bid}-desc" value="${esc(d.description||'')}">`;
+  }
+  if (b.type === 'audio') {
+    return `<label>nom de la piste</label><input type="text" id="${bid}-track" value="${esc(d.track_title||'')}">
+      <label style="margin-top:0.7rem">URL audio</label><input type="url" id="${bid}-url" value="${esc(d.audio_url||'')}" placeholder="https://...">
+      <label style="margin-top:0.7rem">note (optionnel)</label><input type="text" id="${bid}-note" value="${esc(d.note||'')}">`;
+  }
+  return '';
+}
+
+// ── Collect base fields
+function getBaseSaved() { return {}; } // placeholder, not used during collect
+
+function collectBase() {
+  const type = document.getElementById('f-type').value;
+  const v = id => document.getElementById(id)?.value?.trim()||'';
+
+  if (type==='essay')          return { body: v('b-body') };
+  if (type==='fiction')        return { genre: v('b-genre'), body: v('b-body') };
+  if (type==='video')          return { vimeo_id: v('b-vimeo'), description: v('b-desc') };
+  if (type==='audio') {
+    const ablocks = [...document.querySelectorAll('.ablock')].map(el => {
+      const t = el.dataset.type;
+      if (t==='audio') return { type:'audio', track: el.querySelector('.ab-track')?.value?.trim()||'', url: el.querySelector('.ab-url')?.value?.trim()||'' };
+      if (t==='image') return { type:'image', url: el.querySelector('.ab-img-url')?.value?.trim()||'', caption: el.querySelector('.ab-caption')?.value?.trim()||'' };
+      if (t==='text')  return { type:'text',  html: el.querySelector('.ab-html')?.value?.trim()||'' };
+      return null;
+    }).filter(Boolean);
+    return { ablocks };
+  }
+  if (type==='image') {
+    const images = [...document.querySelectorAll('.img-slot-url')].map(i=>i.value.trim()).filter(Boolean);
+    return { layout:'auto', images, caption: v('b-caption') };
+  }
+  if (type==='bd')             return { images: [...document.querySelectorAll('.bd-input')].map(i=>i.value).filter(Boolean), note: v('b-note') };
+  if (type==='projet')         return { tags: v('b-tags').split(',').map(t=>t.trim()).filter(Boolean), description: v('b-desc'), link: v('b-link') };
+  if (type==='thought')        return { text: v('b-text'), meta: v('b-meta') };
+  if (type==='citation')       return { text: v('b-text'), source: v('b-source') };
+  if (type==='lien')           return { url: v('b-url'), title: v('b-ltitle'), comment: v('b-comment') };
+  if (type==='recommendation') return { kind: v('b-kind'), title: v('b-rtitle'), author: v('b-author'), description: v('b-rdesc') };
+  if (type==='poeme')          return { title: v('b-ptitle'), body: v('b-body') };
+  if (type==='playlist')       return { spotify_id: v('b-spotify'), note: v('b-note') };
+  if (type==='recipe') {
+    return {
+      serves: v('b-serves'),
+      ingredients: [...document.querySelectorAll('.ing-input')].map(i=>i.value).filter(Boolean),
+      steps: [...document.querySelectorAll('.step-input')].map(i=>i.value).filter(Boolean)
+    };
+  }
+  if (type==='musique')        return { title: v('b-mus-title'), artist: v('b-mus-artist'), image_url: v('b-mus-img-url'), sc_url: v('b-sc-url'), note: v('b-mus-note') };
+  if (type==='jeu')            return { subtitle: v('b-subtitle') };
+  if (type==='typing')          return {};
+  if (type==='memoire')         return {};
+  if (type==='jeu2048')         return {};
+  if (type==='snake')          return {};
+  if (type==='libre')          return {};
+  if (type==='wip') return { status: v('b-status'), body: v('b-body'), progress: parseInt(v('b-progress'))||0 };
+  return {};
+}
+
+// ── Collect blocks data
+function collectBlocks() {
+  return blocks.map(b => {
+    const bid = `blk-${b.id}`;
+    const v = id => document.getElementById(id)?.value?.trim()||'';
+    if (b.type==='text')  return { type:'text',  data:{ html: v(`${bid}-html`) } };
+    if (b.type==='image') return { type:'image', data:{ url: v(`${bid}-url`) || v(`${bid}-img-url`), caption: v(`${bid}-caption`) } };
+    if (b.type==='video') return { type:'video', data:{ vimeo_id: v(`${bid}-vimeo`), description: v(`${bid}-desc`) } };
+    if (b.type==='audio') return { type:'audio', data:{ track_title: v(`${bid}-track`), audio_url: v(`${bid}-url`), note: v(`${bid}-note`) } };
+    return b;
+  });
+}
+
+// ── Save
+async function save() {
+  if (SUPABASE_URL === 'VOTRE_URL_SUPABASE') { alert('Configure Supabase d\'abord.'); return; }
+  const btn = document.getElementById('save-btn');
+  const msg = document.getElementById('save-msg');
+  btn.disabled = true;
+
+  const type  = document.getElementById('f-type').value;
+  const cat   = document.getElementById('f-cat').value;
+  let   title = document.getElementById('f-title').value.trim();
+
+  // Auto-title for types without explicit title
+  if (!title) {
+    const base = collectBase();
+    title = base.text?.substring(0,50) || base.title || base.rtitle || '(untitled)';
+  }
+
+  const payload = {
+    category:  cat,
+    type,
+    title,
+    published: document.getElementById('f-published').checked,
+    content: {
+      base: {
+        ...collectBase(),
+        keywords: [...document.querySelectorAll('.kw-input')].map(i=>i.value.trim()).filter(Boolean)
+      },
+      blocks: collectBlocks()
+    }
+  };
+
+  let res;
+  if (curId) {
+    res = await fetch(`${SUPABASE_URL}/rest/v1/pages?id=eq.${curId}`, {
+      method:'PATCH', headers:H, body:JSON.stringify(payload)
+    });
+  } else {
+    res = await fetch(`${SUPABASE_URL}/rest/v1/pages`, {
+      method:'POST', headers:H, body:JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data?.[0]?.id) { curId = data[0].id; document.getElementById('del-btn').style.display = 'block'; }
+  }
+
+  btn.disabled = false;
+  msg.classList.add('on');
+  setTimeout(() => msg.classList.remove('on'), 2500);
+  await loadEntries();
+}
+
+// ── Delete
+async function deleteEntry() {
+  if (!confirm('Delete this entry?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/pages?id=eq.${curId}`, { method:'DELETE', headers:H });
+  curId = null;
+  blocks = [];
+  document.getElementById('editor').style.display = 'none';
+  document.getElementById('empty').style.display = 'flex';
+  await loadEntries();
+}
+
+// ── Utils
+let imgSlotCtr = 0;
+function imgSlot(i, url) {
+  const id = `img-slot-${imgSlotCtr++}`;
+  return `<div class="field-row" id="${id}-wrap" style="margin-bottom:0.8rem">
+    <div style="display:flex;gap:0.4rem;align-items:center;margin-bottom:0.4rem">
+      <span style="font-size:0.52rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted)">image ${i+1}</span>
+      <button class="tag-rm" onclick="document.getElementById('${id}-wrap').remove()" style="margin-left:auto">×</button>
+    </div>
+    <div class="img-tabs">
+      <button class="img-tab on" onclick="switchImgTab(this,'url','${id}')">paste URL</button>
+      <button class="img-tab" onclick="switchImgTab(this,'upload','${id}')">upload</button>
+    </div>
+    <div id="${id}-url-area">
+      <input type="url" id="${id}-url" class="img-slot-url" value="${esc(url)}" placeholder="https://..." oninput="previewImg('${id}')">
+    </div>
+    <div id="${id}-upload-area" style="display:none">
+      <div class="img-upload-area" onclick="document.getElementById('${id}-file').click()">
+        <input type="file" id="${id}-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleUpload(this,'${id}')">
+        <span>click or drag an image</span>
+      </div>
+      <p class="upload-progress" id="${id}-progress"></p>
+    </div>
+    <div class="img-preview" id="${id}-preview">
+      ${url ? `<img src="${esc(url)}" alt="" style="max-height:100px;margin-top:0.4rem;display:block">` : ''}
+    </div>
+  </div>`;
+}
+
+function addImgSlot() {
+  const slots = document.getElementById('img-slots');
+  if (!slots) return;
+  const idx = slots.children.length;
+  const div = document.createElement('div');
+  div.innerHTML = imgSlot(idx, '');
+  slots.appendChild(div.firstElementChild);
+}
+
+function htmlToolbar(targetId) {
+  const btns = [
+    { label:'¶',       title:'paragraphe'         },
+    { label:'gras',    title:'gras'                },
+    { label:'italique',title:'italique'            },
+    { label:'titre',   title:'subtitle h2'       },
+    { label:'h3',      title:'subtitle h3'       },
+    { label:'espace',  title:'espace vertical'     },
+    { label:'ligne',   title:'ligne fine'          },
+    { label:'note',    title:'note de bas de page' },
+    { label:'discret', title:'texte discret'       },
+    { label:'lien',    title:'lien hypertexte'     },
+    { label:'centre',  title:'centered text'        },
+    { label:'droite',  title:'right-aligned text'      },
+    { label:'grand',   title:'texte grand'         },
+    { label:'petit',   title:'texte petit'         },
+  ];
+  return `<div class="html-toolbar">${btns.map(b =>
+    `<button class="html-btn" title="${b.title}" onclick="insertHtml('${targetId}','${b.label}')">${b.label}</button>`
+  ).join('')}</div>`;
+}
+
+function insertHtml(targetId, type) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  const start = el.selectionStart;
+  const end   = el.selectionEnd;
+  const sel   = el.value.substring(start, end);
+  const map = {
+    '¶':        ['<p>', '</p>'],
+    'gras':     ['<strong>', '</strong>'],
+    'italique': ['<em>', '</em>'],
+    'titre':    ['<h2>', '</h2>'],
+    'h3':       ['<h3>', '</h3>'],
+    'espace':   ['<p style="margin-top:2rem">', '</p>'],
+    'ligne':    ['<hr style="border:none;border-top:1px solid currentColor;opacity:0.15;margin:1.5rem 0">', ''],
+    'note':     ['<sup class="fn" data-note="ta note ici">', '1</sup>'],
+    'discret':  ['<span style="opacity:0.45">', '</span>'],
+    'lien':     ['<a href="https://" style="color:currentColor">', '</a>'],
+    'centre':   ['<p style="text-align:center">', '</p>'],
+    'droite':   ['<p style="text-align:right">', '</p>'],
+    'grand':    ['<p style="font-size:1.4em">', '</p>'],
+    'petit':    ['<p style="font-size:0.85em;opacity:0.6">', '</p>'],
+  };
+  const [before, after] = map[type] || ['', ''];
+  const replacement = before + sel + after;
+  el.value = el.value.substring(0, start) + replacement + el.value.substring(end);
+  el.selectionStart = el.selectionEnd = start + replacement.length;
+  el.focus();
+}
+
+let ablockCtr = 0;
+function audioBlock(i, b) {
+  const id = `ab-${ablockCtr++}`;
+  const t = b.type || 'audio';
+  let inner = '';
+  if (t === 'audio') {
+    inner = `
+      <div class="field-row"><label>track name (optional)</label>
+        <input type="text" class="ab-track" value="${esc(b.track||'')}" placeholder="ex: Track 1">
+      </div>
+      <div class="field-row"><label>audio file</label>
+        <div class="img-tabs">
+          <button class="img-tab on" onclick="switchImgTab(this,'url','${id}-audio')">paste URL</button>
+          <button class="img-tab" onclick="switchImgTab(this,'upload','${id}-audio')">upload</button>
+        </div>
+        <div id="${id}-audio-url-area">
+          <input type="url" class="ab-url" value="${esc(b.url||'')}" placeholder="https://...">
+        </div>
+        <div id="${id}-audio-upload-area" style="display:none">
+          <div class="img-upload-area" onclick="document.getElementById('${id}-audio-file').click()">
+            <input type="file" id="${id}-audio-file" accept="audio/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleAudioBlockUpload(this,'${id}')">
+            <span>click or drag an audio file (.mp3, .wav, .m4a)</span>
+          </div>
+          <p class="upload-progress" id="${id}-audio-progress"></p>
+        </div>
+      </div>`;
+  } else if (t === 'image') {
+    inner = `
+      ${imageField(`${id}-img`, b.url||'')}
+      <div class="field-row"><label>caption (optional)</label>
+        <input type="text" class="ab-caption" value="${esc(b.caption||'')}">
+      </div>`;
+  } else if (t === 'text') {
+    inner = `<div class="field-row"><label>text</label>
+      ${htmlToolbar(`${id}-html`)}
+      <textarea class="ab-html" style="min-height:80px">${esc(b.html||'')}</textarea>
+    </div>`;
+  }
+  return `<div class="ablock block" id="${id}" data-type="${t}" style="margin-bottom:0.8rem">
+    <div class="block-header">
+      <span class="block-type-label">${t}</span>
+      <div class="block-actions">
+        <button class="block-btn" onclick="moveAblock('${id}',-1)">↑</button>
+        <button class="block-btn" onclick="moveAblock('${id}',1)">↓</button>
+        <button class="block-btn del" onclick="document.getElementById('${id}').remove()">×</button>
+      </div>
+    </div>
+    <div class="block-body">${inner}</div>
+  </div>`;
+}
+
+function addAudioBlock(type) {
+  const area = document.getElementById('ablocks-area');
+  if (!area) return;
+  const idx = area.children.length;
+  const div = document.createElement('div');
+  div.innerHTML = audioBlock(idx, { type });
+  area.appendChild(div.firstElementChild);
+}
+
+function moveAblock(id, dir) {
+  const el = document.getElementById(id);
+  const area = el?.parentElement;
+  if (!area) return;
+  const items = [...area.children];
+  const i = items.indexOf(el);
+  if (dir===-1 && i>0) area.insertBefore(el, items[i-1]);
+  if (dir===1 && i<items.length-1) area.insertBefore(items[i+1], el);
+}
+
+async function handleAudioBlockUpload(input, bid) {
+  const file = input.files[0];
+  if (!file) return;
+  const prog = document.getElementById(`${bid}-audio-progress`);
+  if (prog) prog.textContent = 'uploading...';
+  const ext  = file.name.split('.').pop();
+  const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/audio/${name}`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': file.type },
+      body: file
+    });
+    if (r.ok) {
+      const url = `${SUPABASE_URL}/storage/v1/object/public/audio/${name}`;
+      const urlInput = document.getElementById(bid)?.querySelector('.ab-url');
+      if (urlInput) urlInput.value = url;
+      // Switch to URL tab
+      document.getElementById(`${bid}-audio-url-area`).style.display = '';
+      document.getElementById(`${bid}-audio-upload-area`).style.display = 'none';
+      if (prog) prog.textContent = '✓ audio uploaded';
+    } else {
+      if (prog) prog.textContent = 'upload error — check Supabase Storage bucket';
+    }
+  } catch(e) {
+    if (prog) prog.textContent = 'upload error';
+  }
+}
+
+function addKeyword(val='') {
+  const wrap = document.getElementById('keywords-wrap');
+  if (!wrap) return;
+  const idx = wrap.children.length;
+  const div = document.createElement('div');
+  div.className = 'tag-row';
+  div.id = `kw-row-${idx}`;
+  div.innerHTML = `<input type="text" class="kw-input" value="${esc(val)}" placeholder="ex: montréal, cinéma, été...">
+    <button class="tag-rm" onclick="this.parentElement.remove()">×</button>`;
+  wrap.appendChild(div);
+}
+
+function updateImageLayout() {} // kept for compatibility
+
+// ── Preview
+function previewEntry() {
+  const type  = document.getElementById('f-type').value;
+  const cat   = document.getElementById('f-cat').value;
+  let   title = document.getElementById('f-title')?.value?.trim()||'';
+  const base  = collectBase();
+  const blks  = collectBlocks();
+  const d = { category:cat, type, title, published:true, content:{ base, blocks:blks } };
+  const win = window.open('', '_blank');
+  win.document.write(buildPreviewHTML(d));
+  win.document.close();
+}
+
+function buildPreviewHTML(d) {
+  // Get the full index.html source and inject the entry as the only page
+  const entry = JSON.stringify(d).replace(/</g,'\\u003c').replace(/>/g,'\\u003e');
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>preview</title>
+<script>
+window._previewEntry = ${entry};
+window._isPreview = true;
+<\/script>
+</head><body>
+<script>
+// Load index.html content via fetch and inject
+fetch('index.html').then(r=>r.text()).then(html=>{
+  // Replace the script that loads from supabase to use our preview entry
+  html = html.replace('async function init() {', \`async function init() {
+  if(window._isPreview){ allPages=[window._previewEntry]; return; }\`);
+  document.open(); document.write(html); document.close();
+});
+<\/script>
+</body></html>`;
+}
+
+async function handleAudioUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const prog = document.getElementById('b-audio-progress');
+  if (prog) prog.textContent = 'uploading...';
+  const ext  = file.name.split('.').pop();
+  const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/audio/${name}`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': file.type },
+      body: file
+    });
+    if (r.ok) {
+      const url = `${SUPABASE_URL}/storage/v1/object/public/audio/${name}`;
+      const urlInput = document.getElementById('b-audio-url');
+      if (urlInput) urlInput.value = url;
+      if (prog) prog.textContent = '✓ audio uploaded';
+      document.getElementById('b-audio-url-area').style.display = '';
+      document.getElementById('b-audio-upload-area').style.display = 'none';
+      // Switch tab visually
+      document.querySelectorAll('#b-audio-url-area').forEach(()=>{});
+    } else {
+      if (prog) prog.textContent = 'error — check the "audio" bucket in Supabase Storage';
+    }
+  } catch(e) {
+    if (prog) prog.textContent = 'upload error';
+  }
+}
+
+function toggleMusiqueFields() {
+  const p = document.getElementById('b-platform')?.value;
+  document.getElementById('spotify-field').style.display      = p==='apple' ? 'none' : '';
+  document.getElementById('spotify-type-field').style.display = p==='apple' ? 'none' : '';
+  document.getElementById('apple-field').style.display        = p==='apple' ? '' : 'none';
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
