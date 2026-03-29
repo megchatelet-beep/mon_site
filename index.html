@@ -202,13 +202,14 @@ sup.fn:hover { opacity:1; }
 <div id="fn-tip"><span id="fn-text"></span></div>
 
 <div id="landing">
-  <button id="entrer-btn" onclick="start()">entrer</button>
-  <div style="position:fixed;bottom:2.4rem;right:3rem;font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;opacity:0.3;text-transform:lowercase">Mégane Chatelet</div>
+  <div style="position:fixed;top:2.4rem;left:3rem;font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:0.12em;opacity:0.28;max-width:200px;line-height:1.6">for unfinished projects, bits and pieces</div>
+  <button id="entrer-btn" onclick="start()">enter</button>
+  <div style="position:fixed;bottom:2.4rem;right:3rem;font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;opacity:0.3;text-transform:lowercase">by Mégane Chatelet</div>
 </div>
-<div id="loading"><span>chargement</span></div>
+<div id="loading"><span>loading</span></div>
 <div id="page"><div id="content-area"></div></div>
 <div id="cat-tag"></div>
-<button id="next-btn" onclick="nextPage()">encore <span class="arr">→</span></button>
+<button id="next-btn" onclick="nextPage()">more <span class="arr">→</span></button>
 <div id="visits"></div>
 
 <script>
@@ -222,11 +223,11 @@ const SUPABASE_KEY = 'sb_publishable_EyGTa_9-6zTgl_geANgtqQ_a3ZUunF0';
 const CONFIGURED = SUPABASE_URL !== 'VOTRE_URL_SUPABASE';
 
 const CAT = {
-  essais:   { label:'essai',    bg:'#fafbfc', fg:'#222830' },
-  création: { label:'création', bg:'#fcfbf8', fg:'#28261a' },
-  notes:    { label:'note',     bg:'#fafcfa', fg:'#1e2a1e' },
-  wip:      { label:'wip',      bg:'#fcfafa', fg:'#28201e' },
-  jeu:      { label:'jeu',      bg:'#fafafa', fg:'#3a3a3a' },
+  essais:   { label:'writing', bg:'#fafbfc', fg:'#222830' },
+  création: { label:'making',  bg:'#fcfbf8', fg:'#28261a' },
+  notes:    { label:'note',    bg:'#fafcfa', fg:'#1e2a1e' },
+  wip:      { label:'wip',     bg:'#fcfafa', fg:'#28201e' },
+  jeu:      { label:'play',    bg:'#fafafa', fg:'#3a3a3a' },
 };
 
 // Pages de démo (Supabase non configuré)
@@ -432,7 +433,7 @@ async function gameSearch(query) {
   const res = document.getElementById('game-search-results');
   if (!res) return;
   if (!query.trim()) { res.innerHTML = ''; return; }
-  res.innerHTML = `<p class="game-search-none">recherche...</p>`;
+  res.innerHTML = `<p class="game-search-none">searching...</p>`;
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/pages?select=id,title,category,content&published=eq.true&limit=50`, {
       headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${SUPABASE_KEY}` }
@@ -446,12 +447,12 @@ async function gameSearch(query) {
       const kwMatch = Array.isArray(keywords) && keywords.some(k => k.toLowerCase().includes(ql));
       return titleMatch || kwMatch;
     });
-    if (!matches.length) { res.innerHTML = `<p class="game-search-none">aucun résultat pour "${query}"</p>`; return; }
+    if (!matches.length) { res.innerHTML = `<p class="game-search-none">no results for "${query}"</p>`; return; }
     res.innerHTML = matches.slice(0,6).map(e =>
       `<div class="game-search-item" onclick="goToEntry('${e.id}')">${e.title||'(sans titre)'} <span style="opacity:0.4">— ${e.category}</span></div>`
     ).join('');
   } catch(e) {
-    res.innerHTML = `<p class="game-search-none">erreur — vérifie ta connexion</p>`;
+    res.innerHTML = `<p class="game-search-none">error — check your connection</p>`;
   }
 }
 
@@ -500,10 +501,10 @@ function renderGame(title, c) {
       <div class="game-canvas-wrap">
         <canvas id="game-canvas" width="520" height="400"></canvas>
       </div>
-      <p class="game-msg" id="g-msg">cliquer pour commencer</p>
+      <p class="game-msg" id="g-msg">click to start</p>
       <div class="game-search" id="game-search-wrap" style="display:none">
-        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
-        <input class="game-search-input" id="game-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">you won — search for something →</p>
+        <input class="game-search-input" id="game-search-input" placeholder="a word, a topic..." oninput="gameSearch(this.value)">
         <div class="game-search-results" id="game-search-results"></div>
       </div>
     </div>`;
@@ -577,7 +578,7 @@ function initGame(visitCount) {
     else if(state==='dead'||state==='win'){
       score=0; lives=3; state='idle'; speedMult=1;
       makeBricks(); resetBalls(); drops=[]; particles=[];
-      setScore(); setMsg('cliquer pour commencer');
+      setScore(); setMsg('click to start');
       const w=document.getElementById('game-search-wrap'); if(w) w.style.display='none';
     }
   });
@@ -587,7 +588,7 @@ function initGame(visitCount) {
     else if(state==='dead'||state==='win'){
       score=0; lives=3; state='idle'; speedMult=1;
       makeBricks(); resetBalls(); drops=[]; particles=[];
-      setScore(); setMsg('cliquer pour commencer');
+      setScore(); setMsg('click to start');
       const w=document.getElementById('game-search-wrap'); if(w) w.style.display='none';
     }
   },{passive:false});
@@ -642,9 +643,9 @@ function initGame(visitCount) {
     balls=balls.filter(b=>updateBall(b));
     if(balls.length===0){
       lives--;
-      if(lives<=0){ state='dead'; setMsg('game over — cliquer pour rejouer'); return; }
+      if(lives<=0){ state='dead'; setMsg('game over — tap to play again'); return; }
       state='idle'; speedMult=1; resetBalls();
-      setMsg(`${lives} vie${lives>1?'s':''} — cliquer pour relancer`);
+      setMsg(`${lives} ${lives>1?'lives':'life'} — tap to relaunch`);
     }
     drops.forEach(d=>{d.y+=d.dy;});
     drops=drops.filter(d=>{
@@ -657,7 +658,7 @@ function initGame(visitCount) {
     particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life-=0.055;});
     if(bricks.every(b=>!b.alive)){
       state='win';
-      setMsg('gagné ! cherche quelque chose →');
+      setMsg('you won — search for something →');
       showSearch();
     }
   }
@@ -709,10 +710,10 @@ function renderSnake(title) {
       <div class="game-canvas-wrap">
         <canvas id="snake-canvas" width="520" height="520"></canvas>
       </div>
-      <p class="game-msg" id="s-msg">cliquer pour commencer</p>
+      <p class="game-msg" id="s-msg">click to start</p>
       <div class="game-search" id="snake-search-wrap" style="display:none">
-        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
-        <input class="game-search-input" id="snake-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">you won — search for something →</p>
+        <input class="game-search-input" id="snake-search-input" placeholder="a word, a topic..." oninput="gameSearch(this.value)">
         <div class="game-search-results" id="game-search-results"></div>
       </div>
     </div>`;
@@ -737,7 +738,7 @@ function initSnake(visitCount) {
     dir = {x:1, y:0}; nextDir = {x:1, y:0};
     food = spawnFood();
     score = 0; state = 'idle';
-    setMsg('cliquer pour commencer');
+    setMsg('click to start');
     setScore();
   }
 
@@ -800,7 +801,7 @@ function initSnake(visitCount) {
     const head = {x: (snake[0].x+dir.x+COLS)%COLS, y: (snake[0].y+dir.y+ROWS)%ROWS};
     if (snake.some(s=>s.x===head.x&&s.y===head.y)) {
       state='dead'; clearInterval(interval);
-      setMsg('game over — cliquer pour rejouer'); return;
+      setMsg('game over — tap to play again'); return;
     }
     snake.unshift(head);
     if (food && head.x===food.x && head.y===food.y) {
@@ -809,7 +810,7 @@ function initSnake(visitCount) {
       if (!food) {
         // Grid full = win!
         state='win'; clearInterval(interval);
-        setMsg('gagné ! cherche quelque chose →');
+        setMsg('you won — search for something →');
         showSearch(); return;
       }
     } else {
@@ -858,10 +859,10 @@ function renderTyping(title) {
       <p class="game-score" id="t-score">0 / 0</p>
       <div id="t-word" style="font-family:'Lora',serif;font-size:clamp(1.5rem,4vw,2.5rem);font-weight:400;letter-spacing:0.05em;min-height:3rem;text-align:center;margin:1rem 0;transition:opacity 0.3s"></div>
       <input id="t-input" class="game-search-input" style="font-size:1rem;max-width:320px;width:100%;visibility:hidden" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="tape ici...">
-      <p class="game-msg" id="t-msg" style="cursor:pointer">appuyer pour commencer</p>
+      <p class="game-msg" id="t-msg" style="cursor:pointer">tap to start</p>
       <div class="game-search" id="typing-search-wrap" style="display:none">
-        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
-        <input class="game-search-input" id="typing-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">you won — search for something →</p>
+        <input class="game-search-input" id="typing-search-input" placeholder="a word, a topic..." oninput="gameSearch(this.value)">
         <div class="game-search-results" id="game-search-results"></div>
       </div>
     </div>`;
@@ -896,7 +897,7 @@ function initTyping(visitCount) {
     if (current>=words.length) {
       wordEl.textContent='';
       input.style.visibility='hidden';
-      setMsg('gagné ! cherche quelque chose →');
+      setMsg('you won — search for something →');
       showSearch(); return;
     }
     const displayTimes = [1000, 600, 400, 250];
@@ -942,12 +943,12 @@ function renderMemoire(title) {
   return `
     <div class="game-wrap">
       <h1 class="game-title">${title||'mémoire'}</h1>
-      <p class="game-score" id="m-score">paires — 0</p>
+      <p class="game-score" id="m-score">pairs — 0</p>
       <div id="m-grid" style="display:grid;gap:0.5rem;margin:1rem 0;width:100%;max-width:360px"></div>
-      <p class="game-msg" id="m-msg" style="cursor:pointer">appuyer pour commencer</p>
+      <p class="game-msg" id="m-msg" style="cursor:pointer">tap to start</p>
       <div class="game-search" id="memoire-search-wrap" style="display:none">
-        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
-        <input class="game-search-input" id="memoire-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">you won — search for something →</p>
+        <input class="game-search-input" id="memoire-search-input" placeholder="a word, a topic..." oninput="gameSearch(this.value)">
         <div class="game-search-results" id="game-search-results"></div>
       </div>
     </div>`;
@@ -989,7 +990,7 @@ function initMemoire(visitCount) {
       el.addEventListener('click', () => flip(el));
       grid.appendChild(el);
     });
-    scoreEl.textContent='paires — 0';
+    scoreEl.textContent='pairs — 0';
   }
 
   function flip(el) {
@@ -1003,8 +1004,8 @@ function initMemoire(visitCount) {
         if (flipped[0].dataset.sym===flipped[1].dataset.sym) {
           flipped.forEach(c=>{ c.dataset.revealed='1'; c.style.opacity='0.3'; c.style.cursor='default'; });
           matched++;
-          scoreEl.textContent=`paires — ${matched}`;
-          if (matched===pairs) { setMsg('gagné ! cherche quelque chose →'); msgEl.style.display=''; showSearch(); }
+          scoreEl.textContent=`pairs — ${matched}`;
+          if (matched===pairs) { setMsg('you won — search for something →'); msgEl.style.display=''; showSearch(); }
         } else {
           flipped.forEach(c=>{ c.style.opacity='0.12'; c.textContent=''; });
         }
@@ -1027,11 +1028,11 @@ function render2048(title) {
       <h1 class="game-title">${title||'2048'}</h1>
       <p class="game-score" id="g2-score">score — 0</p>
       <div id="g2-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem;width:100%;max-width:320px;margin:0.5rem 0;touch-action:none"></div>
-      <p class="game-msg" id="g2-msg" style="cursor:pointer">appuyer pour commencer</p>
+      <p class="game-msg" id="g2-msg" style="cursor:pointer">tap to start</p>
       <p style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;opacity:0.28;text-align:center">flèches ou swipe</p>
       <div class="game-search" id="g2-search-wrap" style="display:none">
-        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">tu as gagné — cherche une page sur le site</p>
-        <input class="game-search-input" id="g2-search-input" placeholder="un mot, un sujet..." oninput="gameSearch(this.value)">
+        <p style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;opacity:0.5;text-align:center">you won — search for something →</p>
+        <input class="game-search-input" id="g2-search-input" placeholder="a word, a topic..." oninput="gameSearch(this.value)">
         <div class="game-search-results" id="game-search-results"></div>
       </div>
     </div>`;
@@ -1112,7 +1113,7 @@ function init2048(visitCount) {
     // Check win
     if(!won && board.flat().some(v=>v>=TARGET)) {
       won=true; state='won';
-      setMsg('gagné ! cherche quelque chose →');
+      setMsg('you won — search for something →');
       showSearch(); return;
     }
     // Check lose
@@ -1120,7 +1121,7 @@ function init2048(visitCount) {
       board.some((r,ri)=>r.some((v,ci)=>
         (ri<3&&board[ri+1][ci]===v)||(ci<3&&board[ri][ci+1]===v)
       ));
-    if(!hasMoves) { state='idle'; setMsg('game over — cliquer pour rejouer'); }
+    if(!hasMoves) { state='idle'; setMsg('game over — tap to play again'); }
   }
 
   // Keyboard
