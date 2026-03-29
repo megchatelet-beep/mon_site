@@ -780,8 +780,8 @@ function imageField(inputId, currentUrl, blockIdx=null) {
     <div class="field-row">
       <label>image</label>
       <div class="img-tabs">
-        <button class="img-tab on" onclick="switchImgTab(this,'url','${bid}')">coller une URL</button>
-        <button class="img-tab" onclick="switchImgTab(this,'upload','${bid}')">uploader</button>
+        <button class="img-tab on" onclick="switchImgTab(this,'url','${bid}')">paste URL</button>
+        <button class="img-tab" onclick="switchImgTab(this,'upload','${bid}')">upload</button>
       </div>
       <div id="${bid}-url-area">
         <input type="url" id="${bid}-url" value="${esc(currentUrl)}" placeholder="https://..." oninput="previewImg('${bid}')">
@@ -789,7 +789,7 @@ function imageField(inputId, currentUrl, blockIdx=null) {
       <div id="${bid}-upload-area" style="display:none">
         <div class="img-upload-area" onclick="document.getElementById('${bid}-file').click()">
           <input type="file" id="${bid}-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleUpload(this,'${bid}')">
-          <span>cliquer pour choisir un fichier ou glisser-déposer</span>
+          <span>click or drag a file</span>
         </div>
         <p class="upload-progress" id="${bid}-progress"></p>
       </div>
@@ -819,7 +819,7 @@ async function handleUpload(input, bid) {
   if (prog) prog.textContent = 'upload en cours...';
 
   if (SUPABASE_URL === 'VOTRE_URL_SUPABASE') {
-    if (prog) prog.textContent = 'Configure Supabase pour uploader des images.';
+    if (prog) prog.textContent = 'Configure Supabase pour upload des images.';
     return;
   }
 
@@ -843,10 +843,10 @@ async function handleUpload(input, bid) {
       document.getElementById(`${bid}-url-area`).style.display = '';
       document.getElementById(`${bid}-upload-area`).style.display = 'none';
     } else {
-      if (prog) prog.textContent = 'erreur upload — vérifie le bucket Supabase Storage';
+      if (prog) prog.textContent = 'upload error — check Supabase Storage bucket';
     }
   } catch(e) {
-    if (prog) prog.textContent = 'erreur upload';
+    if (prog) prog.textContent = 'upload error';
   }
 }
 
@@ -1057,8 +1057,8 @@ function imgSlot(i, url) {
       <button class="tag-rm" onclick="document.getElementById('${id}-wrap').remove()" style="margin-left:auto">×</button>
     </div>
     <div class="img-tabs">
-      <button class="img-tab on" onclick="switchImgTab(this,'url','${id}')">coller une URL</button>
-      <button class="img-tab" onclick="switchImgTab(this,'upload','${id}')">uploader</button>
+      <button class="img-tab on" onclick="switchImgTab(this,'url','${id}')">paste URL</button>
+      <button class="img-tab" onclick="switchImgTab(this,'upload','${id}')">upload</button>
     </div>
     <div id="${id}-url-area">
       <input type="url" id="${id}-url" class="img-slot-url" value="${esc(url)}" placeholder="https://..." oninput="previewImg('${id}')">
@@ -1066,7 +1066,7 @@ function imgSlot(i, url) {
     <div id="${id}-upload-area" style="display:none">
       <div class="img-upload-area" onclick="document.getElementById('${id}-file').click()">
         <input type="file" id="${id}-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleUpload(this,'${id}')">
-        <span>cliquer ou glisser une image</span>
+        <span>click or drag une image</span>
       </div>
       <p class="upload-progress" id="${id}-progress"></p>
     </div>
@@ -1209,10 +1209,10 @@ async function handleAudioUpload(input) {
       // Switch tab visually
       document.querySelectorAll('#b-audio-url-area').forEach(()=>{});
     } else {
-      if (prog) prog.textContent = 'erreur — vérifie le bucket "audio" dans Supabase Storage';
+      if (prog) prog.textContent = 'error — check the "audio" bucket in Supabase Storage';
     }
   } catch(e) {
-    if (prog) prog.textContent = 'erreur upload';
+    if (prog) prog.textContent = 'upload error';
   }
 }
 
