@@ -370,12 +370,12 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0
       <input type="text" id="sb-search" placeholder="rechercher..." oninput="renderList()">
     </div>
     <div class="cat-row" id="cat-row">
-      <button class="cat-btn on" data-c="" onclick="setFilter(this,'')">tout</button>
-      <button class="cat-btn" data-c="essais" onclick="setFilter(this,'essais')">essais</button>
-      <button class="cat-btn" data-c="création" onclick="setFilter(this,'création')">création</button>
-      <button class="cat-btn" data-c="notes" onclick="setFilter(this,'notes')">notes</button>
+      <button class="cat-btn on" data-c="" onclick="setFilter(this,'')">all</button>
+      <button class="cat-btn" data-c="essais" onclick="setFilter(this,'essais')">writing</button>
+      <button class="cat-btn" data-c="création" onclick="setFilter(this,'création')">making</button>
+      <button class="cat-btn" data-c="notes" onclick="setFilter(this,'notes')">note</button>
       <button class="cat-btn" data-c="wip" onclick="setFilter(this,'wip')">wip</button>
-      <button class="cat-btn" data-c="jeu" onclick="setFilter(this,'jeu')">jeu</button>
+      <button class="cat-btn" data-c="jeu" onclick="setFilter(this,'jeu')">play</button>
     </div>
     <div class="sb-list" id="sb-list"></div>
     <button class="sb-new" onclick="newEntry()">+ nouvelle entrée</button>
@@ -392,11 +392,11 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0
       <div class="entry-bar">
         <div class="sel-wrap">
           <select id="f-cat" onchange="onCatChange()">
-            <option value="essais">essais</option>
-            <option value="création">création</option>
-            <option value="notes">notes</option>
+            <option value="essais">writing</option>
+            <option value="création">making</option>
+            <option value="notes">note</option>
             <option value="wip">wip</option>
-            <option value="jeu">jeu</option>
+            <option value="jeu">play</option>
           </select>
         </div>
         <div class="sel-wrap">
@@ -570,18 +570,18 @@ function loadEditor(d) {
 // ── Type options per category
 function typeOptions(cat, sel) {
   const map = {
-    essais:   ['essay', 'libre'],
-    création: ['video','audio','image','bd','fiction','projet','libre'],
-    notes:    ['thought','citation','lien','recommendation','poeme','musique','recipe','libre'],
+    essais:   ['essay', 'fiction', 'poeme', 'libre'],
+    création: ['video','audio','image','bd','projet','libre'],
+    notes:    ['thought','citation','lien','recommendation','musique','recipe','libre'],
     wip:      ['wip','libre'],
     jeu:      ['jeu','snake','typing','memoire','jeu2048'],
   };
   const labels = {
-    essay:'essai', video:'vidéo vimeo', audio:'audio', image:'image / photo',
-    bd:'bande dessinée', fiction:'fiction', projet:'projet',
-    thought:'pensée', citation:'citation', lien:'lien commenté',
-    recommendation:'recommandation', poeme:'poème', musique:'musique',
-    recipe:'recette', wip:'wip', jeu:'brick breaker', snake:'snake', typing:'typing', memoire:'mémoire', jeu2048:'2048', libre:'libre (juste des blocs)'
+    essay:'essay', fiction:'fiction', poeme:'poetry', video:'video (vimeo)', audio:'audio',
+    image:'image / photo', bd:'comic', projet:'project',
+    thought:'thought', citation:'quote', lien:'link', recommendation:'recommendation',
+    musique:'music', recipe:'recipe', wip:'wip', jeu:'brick breaker', snake:'snake',
+    typing:'typing', memoire:'memory', jeu2048:'2048', libre:'free (blocks only)'
   };
   return (map[cat]||['thought']).map(t =>
     `<option value="${t}" ${t===sel?'selected':''}>${labels[t]||t}</option>`
@@ -1087,14 +1087,20 @@ function addImgSlot() {
 
 function htmlToolbar(targetId) {
   const btns = [
-    { label:'¶',       title:'paragraphe'        },
-    { label:'gras',    title:'gras'               },
-    { label:'italique',title:'italique'           },
-    { label:'titre',   title:'sous-titre'         },
-    { label:'espace',  title:'espace vertical'    },
-    { label:'ligne',   title:'ligne fine'         },
-    { label:'note',    title:'note de bas de page'},
-    { label:'discret', title:'texte discret'      },
+    { label:'¶',       title:'paragraphe'         },
+    { label:'gras',    title:'gras'                },
+    { label:'italique',title:'italique'            },
+    { label:'titre',   title:'sous-titre h2'       },
+    { label:'h3',      title:'sous-titre h3'       },
+    { label:'espace',  title:'espace vertical'     },
+    { label:'ligne',   title:'ligne fine'          },
+    { label:'note',    title:'note de bas de page' },
+    { label:'discret', title:'texte discret'       },
+    { label:'lien',    title:'lien hypertexte'     },
+    { label:'centre',  title:'texte centré'        },
+    { label:'droite',  title:'texte à droite'      },
+    { label:'grand',   title:'texte grand'         },
+    { label:'petit',   title:'texte petit'         },
   ];
   return `<div class="html-toolbar">${btns.map(b =>
     `<button class="html-btn" title="${b.title}" onclick="insertHtml('${targetId}','${b.label}')">${b.label}</button>`
@@ -1112,10 +1118,16 @@ function insertHtml(targetId, type) {
     'gras':     ['<strong>', '</strong>'],
     'italique': ['<em>', '</em>'],
     'titre':    ['<h2>', '</h2>'],
+    'h3':       ['<h3>', '</h3>'],
     'espace':   ['<p style="margin-top:2rem">', '</p>'],
     'ligne':    ['<hr style="border:none;border-top:1px solid currentColor;opacity:0.15;margin:1.5rem 0">', ''],
     'note':     ['<sup class="fn" data-note="ta note ici">', '1</sup>'],
     'discret':  ['<span style="opacity:0.45">', '</span>'],
+    'lien':     ['<a href="https://" style="color:currentColor">', '</a>'],
+    'centre':   ['<p style="text-align:center">', '</p>'],
+    'droite':   ['<p style="text-align:right">', '</p>'],
+    'grand':    ['<p style="font-size:1.4em">', '</p>'],
+    'petit':    ['<p style="font-size:0.85em;opacity:0.6">', '</p>'],
   };
   const [before, after] = map[type] || ['', ''];
   const replacement = before + sel + after;
