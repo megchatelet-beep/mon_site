@@ -300,7 +300,7 @@ async function start() {
 function nextPage() {
   const page = document.getElementById('page');
   page.classList.remove('on');
-  if (audioEl) { audioEl.pause(); audioEl = null; }
+  if (audioEls.length) { audioEls.forEach(a => a && a.pause()); audioEls = []; }
   // Clean up games
   if (window._snakeInterval) { clearInterval(window._snakeInterval); window._snakeInterval = null; }
   if (window._gameAnimId) { cancelAnimationFrame(window._gameAnimId); window._gameAnimId = null; }
@@ -368,8 +368,36 @@ function renderBase(type, title, c) {
     return `<h1 class="fiction-title">${title}</h1>${c.genre?`<p class="fiction-genre">${c.genre}</p>`:''}<div class="fiction-body">${autoParagraph(c.body||'')}</div>`;
   if (type==='video')
     return `<p class="video-title">${title}</p><div class="video-wrap"><iframe src="https://player.vimeo.com/video/${c.vimeo_id}?color=ffffff&title=0&byline=0&portrait=0&dnt=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div><p class="video-desc">${c.description||''}</p>`;
-  if (type==='audio')
-    return `<p class="audio-page-title">${title}</p><div class="audio-player"><button class="play-btn" id="play-btn" onclick="togglePlay()"><svg id="play-icon" viewBox="0 0 10 12"><polygon points="0,0 10,6 0,12"/></svg></button><div class="audio-info"><div class="track-name">${c.track_title||''}</div><div class="progress-bar" onclick="seekAudio(event)"><div class="progress-fill" id="pfill"></div></div><div class="audio-time" id="atime">0:00 / —:——</div></div></div>${c.note?`<p class="audio-note">${c.note}</p>`:''}<audio id="audio-el" preload="metadata" src="${c.audio_url||''}"></audio>`;
+  if (type==='audio') {
+    const ablocks = c.ablocks || [];
+    // Legacy support
+    if (!ablocks.length && c.audio_url) {
+      return `<h1 class="audio-page-title">${title}</h1><div class="audio-player"><button class="play-btn" id="play-btn-0" onclick="toggleAudioPlay(0)"><svg id="play-icon-0" viewBox="0 0 10 12"><polygon points="0,0 10,6 0,12"/></svg></button><div class="audio-info"><div class="track-name">${c.track_title||''}</div><div class="progress-bar" onclick="seekAudio(event,0)"><div class="progress-fill" id="pfill-0"></div></div><div class="audio-time" id="atime-0">0:00 / —:——</div></div></div><audio id="audio-el-0" preload="metadata" src="${c.audio_url}"></audio>`;
+    }
+    let html = `<h1 class="audio-page-title">${title}</h1>`;
+    ablocks.forEach((b, i) => {
+      if (b.type==='audio') {
+        html += `<div class="audio-player">
+          <button class="play-btn" id="play-btn-${i}" onclick="toggleAudioPlay(${i})">
+            <svg id="play-icon-${i}" viewBox="0 0 10 12"><polygon points="0,0 10,6 0,12"/></svg>
+          </button>
+          <div class="audio-info">
+            ${b.track ? `<div class="track-name">${b.track}</div>` : ''}
+            <div class="progress-bar" onclick="seekAudio(event,${i})"><div class="progress-fill" id="pfill-${i}"></div></div>
+            <div class="audio-time" id="atime-${i}">0:00 / —:——</div>
+          </div>
+        </div>
+        <audio id="audio-el-${i}" preload="metadata" src="${b.url||''}"></audio>`;
+      } else if (b.type==='image') {
+        html += `<div class="image-wrap" style="margin:1.2rem 0"><img src="${b.url||''}" alt=""></div>`;
+        if (b.caption) html += `<p class="image-caption">${b.caption}</p>`;
+      } else if (b.type==='text') {
+        html += `<div class="block-text" style="margin:1.2rem 0">${b.html||''}</div>`;
+      }
+    });
+    setTimeout(() => initMultiAudio(ablocks.length || 1), 50);
+    return html;
+  }
   if (type==='image') {
     const imgs = c.images || (c.image_url ? [c.image_url] : []);
     const cap = c.caption ? `<p class="image-caption">${c.caption}</p>` : '';
@@ -1186,38 +1214,50 @@ function init2048(visitCount) {
 }
 
 // ── Audio
-function initAudio(d) {
-  audioEl = document.getElementById('audio-el');
-  if (!audioEl) return;
-  audioEl.addEventListener('timeupdate', () => {
-    if (!audioEl.duration) return;
-    const pct = (audioEl.currentTime/audioEl.duration)*100;
-    const f = document.getElementById('pfill');
-    const t = document.getElementById('atime');
-    if (f) f.style.width = pct+'%';
-    if (t) t.textContent = `${fmt(audioEl.currentTime)} / ${fmt(audioEl.duration)}`;
-  });
-  audioEl.addEventListener('ended', () => setIcon(false));
-}
-function togglePlay() {
-  if (!audioEl) return;
-  if (audioEl.paused) {
-    audioEl.play().then(() => setIcon(true)).catch(e => console.log('audio error:', e));
-  } else {
-    audioEl.pause();
-    setIcon(false);
+// ── Audio (multi-player)
+let audioEls = [];
+function initMultiAudio(count) {
+  audioEls = [];
+  for (let i = 0; i < count; i++) {
+    const el = document.getElementById(`audio-el-${i}`);
+    if (!el) continue;
+    audioEls[i] = el;
+    ((idx, elem) => {
+      elem.addEventListener('timeupdate', () => {
+        if (!elem.duration) return;
+        const pct = (elem.currentTime/elem.duration)*100;
+        const f = document.getElementById(`pfill-${idx}`);
+        const t = document.getElementById(`atime-${idx}`);
+        if (f) f.style.width = pct+'%';
+        if (t) t.textContent = `${fmt(elem.currentTime)} / ${fmt(elem.duration)}`;
+      });
+      elem.addEventListener('ended', () => setAudioIcon(idx, false));
+    })(i, el);
   }
 }
-function seekAudio(e) {
-  if (!audioEl||!audioEl.duration) return;
+function toggleAudioPlay(i) {
+  const el = audioEls[i] || document.getElementById(`audio-el-${i}`);
+  if (!el) return;
+  if (el.paused) { el.play().then(()=>setAudioIcon(i,true)).catch(e=>console.log(e)); }
+  else { el.pause(); setAudioIcon(i, false); }
+}
+function setAudioIcon(i, playing) {
+  const icon = document.getElementById(`play-icon-${i}`);
+  if (!icon) return;
+  icon.innerHTML = playing
+    ? '<rect x="0" y="0" width="3.5" height="12"/><rect x="6.5" y="0" width="3.5" height="12"/>'
+    : '<polygon points="0,0 10,6 0,12"/>';
+}
+function seekAudio(e, i) {
+  const el = audioEls[i] || document.getElementById(`audio-el-${i}`);
+  if (!el||!el.duration) return;
   const r = e.currentTarget.getBoundingClientRect();
-  audioEl.currentTime = ((e.clientX-r.left)/r.width)*audioEl.duration;
+  el.currentTime = ((e.clientX-r.left)/r.width)*el.duration;
 }
-function setIcon(p) {
-  const ico = document.getElementById('play-icon');
-  if (!ico) return;
-  ico.innerHTML = p ? '<rect x="0" y="0" width="3.5" height="12"/><rect x="6.5" y="0" width="3.5" height="12"/>' : '<polygon points="0,0 10,6 0,12"/>';
-}
+// Legacy single-player support
+function initAudio(d) { setTimeout(() => initMultiAudio(1), 50); }
+function togglePlay() { toggleAudioPlay(0); }
+function setIcon(p) { setAudioIcon(0, p); }
 function fmt(s) {
   if (!s||isNaN(s)) return '—:——';
   return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
