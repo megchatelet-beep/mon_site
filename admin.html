@@ -627,26 +627,17 @@ function renderBaseFields(saved = null) {
       <div class="field-row"><label>description (optional)</label>${inp('b-desc', c.description||'')}</div>`;
   }
   else if (type === 'audio') {
+    const ablocks = c.ablocks || [];
     cont.innerHTML = `
-      <div class="field-row"><label>track name</label>${inp('b-track', c.track_title||'')}</div>
-      <div class="field-row"><label>audio file</label>
-        <div class="img-tabs">
-          <button class="img-tab on" onclick="switchImgTab(this,'url','b-audio')">paste URL</button>
-          <button class="img-tab" onclick="switchImgTab(this,'upload','b-audio')">upload</button>
+      <div class="field-row">
+        <label>content — add audio, images or text in any order</label>
+        <div id="ablocks-area">${ablocks.map((b,i) => audioBlock(i, b)).join('')}</div>
+        <div style="display:flex;gap:0.5rem;margin-top:0.8rem;flex-wrap:wrap">
+          <button class="tag-add" onclick="addAudioBlock('audio')">+ audio</button>
+          <button class="tag-add" onclick="addAudioBlock('image')">+ image</button>
+          <button class="tag-add" onclick="addAudioBlock('text')">+ text</button>
         </div>
-        <div id="b-audio-url-area">
-          <input type="url" id="b-audio-url" value="${esc(c.audio_url||'')}" placeholder="https://...">
-        </div>
-        <div id="b-audio-upload-area" style="display:none">
-          <div class="img-upload-area" onclick="document.getElementById('b-audio-file').click()">
-            <input type="file" id="b-audio-file" accept="audio/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleAudioUpload(this)">
-            <span>click or drag an audio file (.mp3, .wav, .m4a)</span>
-          </div>
-          <p class="upload-progress" id="b-audio-progress"></p>
-        </div>
-        <p class="field-hint">Accepted formats: .mp3, .wav, .m4a, .ogg</p>
-      </div>
-      <div class="field-row"><label>note (optional)</label>${inp('b-note', c.note||'')}</div>`;
+      </div>`;
   }
   else if (type === 'image') {
     const imgs = c.images||[''];
@@ -942,7 +933,16 @@ function collectBase() {
   if (type==='essay')          return { body: v('b-body') };
   if (type==='fiction')        return { genre: v('b-genre'), body: v('b-body') };
   if (type==='video')          return { vimeo_id: v('b-vimeo'), description: v('b-desc') };
-  if (type==='audio')          return { track_title: v('b-track'), audio_url: v('b-audio-url'), note: v('b-note') };
+  if (type==='audio') {
+    const ablocks = [...document.querySelectorAll('.ablock')].map(el => {
+      const t = el.dataset.type;
+      if (t==='audio') return { type:'audio', track: el.querySelector('.ab-track')?.value?.trim()||'', url: el.querySelector('.ab-url')?.value?.trim()||'' };
+      if (t==='image') return { type:'image', url: el.querySelector('.ab-img-url')?.value?.trim()||'', caption: el.querySelector('.ab-caption')?.value?.trim()||'' };
+      if (t==='text')  return { type:'text',  html: el.querySelector('.ab-html')?.value?.trim()||'' };
+      return null;
+    }).filter(Boolean);
+    return { ablocks };
+  }
   if (type==='image') {
     const images = [...document.querySelectorAll('.img-slot-url')].map(i=>i.value.trim()).filter(Boolean);
     return { layout:'auto', images, caption: v('b-caption') };
@@ -1134,6 +1134,105 @@ function insertHtml(targetId, type) {
   el.value = el.value.substring(0, start) + replacement + el.value.substring(end);
   el.selectionStart = el.selectionEnd = start + replacement.length;
   el.focus();
+}
+
+let ablockCtr = 0;
+function audioBlock(i, b) {
+  const id = `ab-${ablockCtr++}`;
+  const t = b.type || 'audio';
+  let inner = '';
+  if (t === 'audio') {
+    inner = `
+      <div class="field-row"><label>track name (optional)</label>
+        <input type="text" class="ab-track" value="${esc(b.track||'')}" placeholder="ex: Track 1">
+      </div>
+      <div class="field-row"><label>audio file</label>
+        <div class="img-tabs">
+          <button class="img-tab on" onclick="switchImgTab(this,'url','${id}-audio')">paste URL</button>
+          <button class="img-tab" onclick="switchImgTab(this,'upload','${id}-audio')">upload</button>
+        </div>
+        <div id="${id}-audio-url-area">
+          <input type="url" class="ab-url" value="${esc(b.url||'')}" placeholder="https://...">
+        </div>
+        <div id="${id}-audio-upload-area" style="display:none">
+          <div class="img-upload-area" onclick="document.getElementById('${id}-audio-file').click()">
+            <input type="file" id="${id}-audio-file" accept="audio/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleAudioBlockUpload(this,'${id}')">
+            <span>click or drag an audio file (.mp3, .wav, .m4a)</span>
+          </div>
+          <p class="upload-progress" id="${id}-audio-progress"></p>
+        </div>
+      </div>`;
+  } else if (t === 'image') {
+    inner = `
+      ${imageField(`${id}-img`, b.url||'')}
+      <div class="field-row"><label>caption (optional)</label>
+        <input type="text" class="ab-caption" value="${esc(b.caption||'')}">
+      </div>`;
+  } else if (t === 'text') {
+    inner = `<div class="field-row"><label>text</label>
+      ${htmlToolbar(`${id}-html`)}
+      <textarea class="ab-html" style="min-height:80px">${esc(b.html||'')}</textarea>
+    </div>`;
+  }
+  return `<div class="ablock block" id="${id}" data-type="${t}" style="margin-bottom:0.8rem">
+    <div class="block-header">
+      <span class="block-type-label">${t}</span>
+      <div class="block-actions">
+        <button class="block-btn" onclick="moveAblock('${id}',-1)">↑</button>
+        <button class="block-btn" onclick="moveAblock('${id}',1)">↓</button>
+        <button class="block-btn del" onclick="document.getElementById('${id}').remove()">×</button>
+      </div>
+    </div>
+    <div class="block-body">${inner}</div>
+  </div>`;
+}
+
+function addAudioBlock(type) {
+  const area = document.getElementById('ablocks-area');
+  if (!area) return;
+  const idx = area.children.length;
+  const div = document.createElement('div');
+  div.innerHTML = audioBlock(idx, { type });
+  area.appendChild(div.firstElementChild);
+}
+
+function moveAblock(id, dir) {
+  const el = document.getElementById(id);
+  const area = el?.parentElement;
+  if (!area) return;
+  const items = [...area.children];
+  const i = items.indexOf(el);
+  if (dir===-1 && i>0) area.insertBefore(el, items[i-1]);
+  if (dir===1 && i<items.length-1) area.insertBefore(items[i+1], el);
+}
+
+async function handleAudioBlockUpload(input, bid) {
+  const file = input.files[0];
+  if (!file) return;
+  const prog = document.getElementById(`${bid}-audio-progress`);
+  if (prog) prog.textContent = 'uploading...';
+  const ext  = file.name.split('.').pop();
+  const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/audio/${name}`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': file.type },
+      body: file
+    });
+    if (r.ok) {
+      const url = `${SUPABASE_URL}/storage/v1/object/public/audio/${name}`;
+      const urlInput = document.getElementById(bid)?.querySelector('.ab-url');
+      if (urlInput) urlInput.value = url;
+      // Switch to URL tab
+      document.getElementById(`${bid}-audio-url-area`).style.display = '';
+      document.getElementById(`${bid}-audio-upload-area`).style.display = 'none';
+      if (prog) prog.textContent = '✓ audio uploaded';
+    } else {
+      if (prog) prog.textContent = 'upload error — check Supabase Storage bucket';
+    }
+  } catch(e) {
+    if (prog) prog.textContent = 'upload error';
+  }
 }
 
 function addKeyword(val='') {
