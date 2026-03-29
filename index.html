@@ -821,18 +821,21 @@ function initSnake(visitCount) {
 
   function draw() {
     ctx.clearRect(0,0,W,H);
-    if (food) {
-      ctx.fillStyle = fg; ctx.globalAlpha = 0.55;
-      ctx.beginPath();
-      ctx.arc(food.x*CELL+CELL/2, food.y*CELL+CELL/2, CELL*0.22, 0, Math.PI*2);
-      ctx.fill();
-    }
+    // Snake
     snake.forEach((s, i) => {
-      ctx.globalAlpha = i===0 ? 0.85 : 0.4 + (1-i/snake.length)*0.4;
+      ctx.globalAlpha = i===0 ? 0.85 : Math.max(0.25, 0.7 - (i/snake.length)*0.5);
       ctx.fillStyle = fg;
       const gap = 2;
       ctx.fillRect(s.x*CELL+gap, s.y*CELL+gap, CELL-gap*2, CELL-gap*2);
     });
+    // Food — draw on top, bigger dot
+    if (food) {
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = fg;
+      ctx.beginPath();
+      ctx.arc(food.x*CELL+CELL/2, food.y*CELL+CELL/2, CELL*0.32, 0, Math.PI*2);
+      ctx.fill();
+    }
     ctx.globalAlpha = 1;
   }
 
