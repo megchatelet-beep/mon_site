@@ -356,7 +356,7 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0
 
 <!-- Login -->
 <div id="login">
-  <p class="login-label">administration</p>
+  <p class="login-label">admin</p>
   <input type="password" id="pw" placeholder="mot de passe">
   <p id="login-err"></p>
   <button id="login-btn" onclick="login()">entrer</button>
@@ -366,8 +366,8 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0
 <div id="app">
   <aside id="sidebar">
     <div class="sb-top">
-      <p class="sb-site">mon site</p>
-      <input type="text" id="sb-search" placeholder="rechercher..." oninput="renderList()">
+      <p class="sb-site">my site</p>
+      <input type="text" id="sb-search" placeholder="search..." oninput="renderList()">
     </div>
     <div class="cat-row" id="cat-row">
       <button class="cat-btn on" data-c="" onclick="setFilter(this,'')">all</button>
@@ -378,13 +378,13 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0
       <button class="cat-btn" data-c="jeu" onclick="setFilter(this,'jeu')">play</button>
     </div>
     <div class="sb-list" id="sb-list"></div>
-    <button class="sb-new" onclick="newEntry()">+ nouvelle entrée</button>
+    <button class="sb-new" onclick="newEntry()">+ new entry</button>
   </aside>
 
   <main id="main">
     <div id="empty">
-      <p>aucune entrée sélectionnée</p>
-      <span>clique sur une entrée ou crée-en une nouvelle</span>
+      <p>no entry selected</p>
+      <span>click on an entry or create a new one</span>
     </div>
 
     <div id="editor">
@@ -405,7 +405,7 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0
           </select>
         </div>
         <div class="draft-toggle">
-          <label for="f-published">publié</label>
+          <label for="f-published">published</label>
           <div class="toggle-wrap">
             <input type="checkbox" id="f-published" checked>
             <div class="toggle-slider"></div>
@@ -418,31 +418,31 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.8rem 0
 
       <!-- Keywords -->
       <div style="margin-bottom:1.5rem">
-        <label style="display:block;font-size:0.54rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem">mots-clés (invisibles sur le site, pour la recherche)</label>
+        <label style="display:block;font-size:0.54rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem">keywords (hidden on site, for search)</label>
         <div class="tags-wrap" id="keywords-wrap"></div>
-        <button class="tag-add" onclick="addKeyword()" style="margin-top:0.3rem">+ mot-clé</button>
+        <button class="tag-add" onclick="addKeyword()" style="margin-top:0.3rem">+ keyword</button>
       </div>
-      <p class="section-label">contenu principal</p>
+      <p class="section-label">main content</p>
       <div id="base-fields"></div>
 
       <hr class="divider">
 
       <!-- Blocks -->
-      <p class="section-label">blocs supplémentaires</p>
+      <p class="section-label">additional blocks</p>
       <div id="blocks-area"></div>
       <div class="add-blocks">
-        <button class="add-block-btn" onclick="addBlock('text')">+ texte</button>
+        <button class="add-block-btn" onclick="addBlock('text')">+ text</button>
         <button class="add-block-btn" onclick="addBlock('image')">+ image</button>
-        <button class="add-block-btn" onclick="addBlock('video')">+ vidéo vimeo</button>
+        <button class="add-block-btn" onclick="addBlock('video')">+ video vimeo</button>
         <button class="add-block-btn" onclick="addBlock('audio')">+ audio</button>
       </div>
 
       <!-- Actions -->
       <div class="editor-actions">
-        <button class="btn-save" id="save-btn" onclick="save()">enregistrer</button>
-        <button class="btn-preview" onclick="previewEntry()">aperçu ↗</button>
-        <span class="save-msg" id="save-msg">✓ sauvegardé</span>
-        <button class="btn-del" id="del-btn" onclick="deleteEntry()" style="display:none">supprimer</button>
+        <button class="btn-save" id="save-btn" onclick="save()">save</button>
+        <button class="btn-preview" onclick="previewEntry()">preview ↗</button>
+        <span class="save-msg" id="save-msg">✓ saved</span>
+        <button class="btn-del" id="del-btn" onclick="deleteEntry()" style="display:none">delete</button>
       </div>
     </div>
   </main>
@@ -480,7 +480,7 @@ function login() {
     loadEntries();
   } else {
     const err = document.getElementById('login-err');
-    err.textContent = 'mot de passe incorrect';
+    err.textContent = 'incorrect password';
     setTimeout(() => err.textContent = '', 2000);
   }
 }
@@ -510,13 +510,13 @@ function renderList() {
     return true;
   });
   document.getElementById('sb-list').innerHTML = list.length === 0
-    ? `<div style="padding:1.2rem 1.4rem;font-size:0.6rem;color:var(--muted);font-style:italic">aucune entrée</div>`
+    ? `<div style="padding:1.2rem 1.4rem;font-size:0.6rem;color:var(--muted);font-style:italic">no entries</div>`
     : list.map(e => `
       <div class="sb-item ${e.id===curId?'on':''}" onclick="openEntry('${e.id}')">
         <div class="sb-item-cat">
           <span class="cat-dot ${e.category}"></span>
           ${e.category}
-          ${!e.published ? `<span class="sb-item-draft">brouillon</span>` : ''}
+          ${!e.published ? `<span class="sb-item-draft">draft</span>` : ''}
         </div>
         <div class="sb-item-title">${e.title||'(sans titre)'}</div>
       </div>`).join('');
@@ -603,36 +603,36 @@ function renderBaseFields(saved = null) {
   const inp  = (id, val='', ph='') => `<input type="text" id="${id}" value="${esc(val)}" placeholder="${ph}">`;
   const inpu = (id, val='', ph='') => `<input type="url" id="${id}" value="${esc(val)}" placeholder="${ph}">`;
   const ta   = (id, val='', h=120) => `<textarea id="${id}" style="min-height:${h}px">${esc(val)}</textarea>`;
-  const fnH  = `<p class="fn-hint">Note de bas de page : <code>&lt;sup class="fn" data-note="ta note"&gt;1&lt;/sup&gt;</code></p>`;
+  const fnH  = `<p class="fn-hint">Footnote: <code>&lt;sup class="fn" data-note="your note"&gt;1&lt;/sup&gt;</code></p>`;
   const hint = t => `<p class="field-hint">${t}</p>`;
 
   if (type === 'essay') {
     cont.innerHTML = `
-      <div class="field-row"><label>texte principal</label>
+      <div class="field-row"><label>main text</label>
       ${htmlToolbar('b-body')}
       ${ta('b-body', c.body||'', 200)}
       ${fnH}</div>`;
   }
   else if (type === 'fiction') {
     cont.innerHTML = `
-      <div class="field-row"><label>genre (optionnel)</label>${inp('b-genre', c.genre||'', 'fiction courte, nouvelle...')}</div>
-      <div class="field-row"><label>texte</label>
+      <div class="field-row"><label>genre (optional)</label>${inp('b-genre', c.genre||'', 'short story, novel...')}</div>
+      <div class="field-row"><label>text</label>
       ${htmlToolbar('b-body')}
       ${ta('b-body', c.body||'', 220)}</div>`;
   }
   else if (type === 'video') {
     cont.innerHTML = `
-      <div class="field-row"><label>ID Vimeo</label>${inp('b-vimeo', c.vimeo_id||'', 'ex: 148751763')}
-      ${hint("L'ID est dans l'URL : vimeo.com/<strong>148751763</strong>")}</div>
-      <div class="field-row"><label>description (optionnel)</label>${inp('b-desc', c.description||'')}</div>`;
+      <div class="field-row"><label>Vimeo ID</label>${inp('b-vimeo', c.vimeo_id||'', 'ex: 148751763')}
+      ${hint("The ID is in the URL: vimeo.com/<strong>148751763</strong>")}</div>
+      <div class="field-row"><label>description (optional)</label>${inp('b-desc', c.description||'')}</div>`;
   }
   else if (type === 'audio') {
     cont.innerHTML = `
-      <div class="field-row"><label>nom de la piste</label>${inp('b-track', c.track_title||'')}</div>
-      <div class="field-row"><label>fichier audio</label>
+      <div class="field-row"><label>track name</label>${inp('b-track', c.track_title||'')}</div>
+      <div class="field-row"><label>audio file</label>
         <div class="img-tabs">
-          <button class="img-tab on" onclick="switchImgTab(this,'url','b-audio')">coller une URL</button>
-          <button class="img-tab" onclick="switchImgTab(this,'upload','b-audio')">uploader</button>
+          <button class="img-tab on" onclick="switchImgTab(this,'url','b-audio')">paste URL</button>
+          <button class="img-tab" onclick="switchImgTab(this,'upload','b-audio')">upload</button>
         </div>
         <div id="b-audio-url-area">
           <input type="url" id="b-audio-url" value="${esc(c.audio_url||'')}" placeholder="https://...">
@@ -640,85 +640,85 @@ function renderBaseFields(saved = null) {
         <div id="b-audio-upload-area" style="display:none">
           <div class="img-upload-area" onclick="document.getElementById('b-audio-file').click()">
             <input type="file" id="b-audio-file" accept="audio/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleAudioUpload(this)">
-            <span>cliquer ou glisser un fichier audio (.mp3, .wav, .m4a)</span>
+            <span>click or drag an audio file (.mp3, .wav, .m4a)</span>
           </div>
           <p class="upload-progress" id="b-audio-progress"></p>
         </div>
-        <p class="field-hint">Formats acceptés : .mp3, .wav, .m4a, .ogg</p>
+        <p class="field-hint">Accepted formats: .mp3, .wav, .m4a, .ogg</p>
       </div>
-      <div class="field-row"><label>note (optionnel)</label>${inp('b-note', c.note||'')}</div>`;
+      <div class="field-row"><label>note (optional)</label>${inp('b-note', c.note||'')}</div>`;
   }
   else if (type === 'image') {
     const imgs = c.images||[''];
     cont.innerHTML = `
       <div class="field-row">
-        <label>images — ajoutez-en autant que vous voulez</label>
+        <label>images — add as many as you want</label>
         <div id="img-slots">${imgs.map((url,i) => imgSlot(i, url)).join('')}</div>
-        <button class="tag-add" onclick="addImgSlot()" style="margin-top:0.5rem">+ ajouter une image</button>
-        <p class="field-hint">La grille s'adapte automatiquement selon le nombre d'images et la taille de l'écran.</p>
+        <button class="tag-add" onclick="addImgSlot()" style="margin-top:0.5rem">+ add image</button>
+        <p class="field-hint">The grid adapts automatically to the number of images and screen size.</p>
       </div>
-      <div class="field-row"><label>légende (optionnel)</label>${inp('b-caption', c.caption||'')}</div>`;
+      <div class="field-row"><label>caption (optional)</label>${inp('b-caption', c.caption||'')}</div>`;
   }
   else if (type === 'bd') {
     const imgs = c.images||[''];
     cont.innerHTML = `
-      <div class="field-row"><label>planches (une URL par image)</label>
+      <div class="field-row"><label>pages (one URL per image)</label>
         <div class="tags-wrap" id="bd-wrap">${imgs.map((v,i)=>tagRow('bd',i,v)).join('')}</div>
-        <button class="tag-add" onclick="addTag('bd','bd-wrap')">+ planche</button>
+        <button class="tag-add" onclick="addTag('bd','bd-wrap')">+ page</button>
       </div>
-      <div class="field-row"><label>note (optionnel)</label>${inp('b-note', c.note||'')}</div>`;
+      <div class="field-row"><label>note (optional)</label>${inp('b-note', c.note||'')}</div>`;
   }
   else if (type === 'projet') {
     cont.innerHTML = `
-      <div class="field-row"><label>mots-clés (séparés par des virgules)</label>${inp('b-tags', (c.tags||[]).join(', '), 'photographie, archive...')}</div>
+      <div class="field-row"><label>tags (comma separated)</label>${inp('b-tags', (c.tags||[]).join(', '), 'photography, archive...')}</div>
       <div class="field-row"><label>description</label>${htmlToolbar('b-desc')}${ta('b-desc', c.description||'')}</div>
-      <div class="field-row"><label>lien externe (optionnel)</label>${inpu('b-link', c.link||'', 'https://...')}</div>`;
+      <div class="field-row"><label>external link (optional)</label>${inpu('b-link', c.link||'', 'https://...')}</div>`;
   }
   else if (type === 'thought') {
     cont.innerHTML = `
-      <div class="field-row"><label>pensée</label>${htmlToolbar('b-text')}${ta('b-text', c.text||'', 90)}</div>
-      <div class="field-row"><label>contexte (optionnel)</label>${inp('b-meta', c.meta||'', 'dans le métro, 23h12...')}</div>`;
+      <div class="field-row"><label>thought</label>${htmlToolbar('b-text')}${ta('b-text', c.text||'', 90)}</div>
+      <div class="field-row"><label>context (optional)</label>${inp('b-meta', c.meta||'', 'on the metro, 11pm...')}</div>`;
   }
   else if (type === 'citation') {
     cont.innerHTML = `
-      <div class="field-row"><label>citation</label>${htmlToolbar('b-text')}${ta('b-text', c.text||'', 90)}</div>
-      <div class="field-row"><label>source</label>${inp('b-source', c.source||'', 'Albert Camus — L\'Étranger')}</div>`;
+      <div class="field-row"><label>quote</label>${htmlToolbar('b-text')}${ta('b-text', c.text||'', 90)}</div>
+      <div class="field-row"><label>source</label>${inp('b-source', c.source||'', 'Albert Camus — The Stranger')}</div>`;
   }
   else if (type === 'lien') {
     cont.innerHTML = `
       <div class="field-row"><label>URL</label>${inpu('b-url', c.url||'', 'https://...')}</div>
-      <div class="field-row"><label>titre de la page</label>${inp('b-ltitle', c.title||'')}</div>
-      <div class="field-row"><label>ton commentaire</label>${htmlToolbar('b-comment')}${ta('b-comment', c.comment||'')}</div>`;
+      <div class="field-row"><label>page title</label>${inp('b-ltitle', c.title||'')}</div>
+      <div class="field-row"><label>your comment</label>${htmlToolbar('b-comment')}${ta('b-comment', c.comment||'')}</div>`;
   }
   else if (type === 'recommendation') {
-    const kinds = ['film','livre','musique','podcast','série','article','jeu','expo'];
+    const kinds = ['film','book','music','podcast','series','article','game','exhibition'];
     cont.innerHTML = `
       <div class="field-row"><label>type</label>
         <div class="sel-wrap"><select id="b-kind">${kinds.map(k=>`<option value="${k}" ${(c.kind||'film')===k?'selected':''}>${k}</option>`).join('')}</select></div>
       </div>
-      <div class="field-row"><label>titre</label>${inp('b-rtitle', c.title||'')}</div>
-      <div class="field-row"><label>auteur / année</label>${inp('b-author', c.author||'', 'ex: Chantal Akerman, 1975')}</div>
-      <div class="field-row"><label>pourquoi tu recommandes ça</label>${htmlToolbar('b-rdesc')}${ta('b-rdesc', c.description||'')}</div>`;
+      <div class="field-row"><label>title</label>${inp('b-rtitle', c.title||'')}</div>
+      <div class="field-row"><label>author / year</label>${inp('b-author', c.author||'', 'ex: Chantal Akerman, 1975')}</div>
+      <div class="field-row"><label>why you recommend it</label>${htmlToolbar('b-rdesc')}${ta('b-rdesc', c.description||'')}</div>`;
   }
   else if (type === 'poeme') {
     cont.innerHTML = `
-      <div class="field-row"><label>titre (optionnel)</label>${inp('b-ptitle', c.title||'')}</div>
-      <div class="field-row"><label>texte — les sauts de ligne sont respectés</label>${htmlToolbar('b-body')}${ta('b-body', c.body||'', 180)}</div>`;
+      <div class="field-row"><label>title (optional)</label>${inp('b-ptitle', c.title||'')}</div>
+      <div class="field-row"><label>text — line breaks are preserved</label>${htmlToolbar('b-body')}${ta('b-body', c.body||'', 180)}</div>`;
   }
   else if (type === 'musique') {
     cont.innerHTML = `
-      <div class="field-row"><label>titre</label>
+      <div class="field-row"><label>title</label>
         ${inp('b-mus-title', c.title||'', 'ex: Only God Was Above Us')}
       </div>
-      <div class="field-row"><label>artiste (optionnel)</label>
+      <div class="field-row"><label>artist (optional)</label>
         ${inp('b-mus-artist', c.artist||'', 'ex: Vampire Weekend')}
       </div>
       ${imageField('b-mus-img', c.image_url||'')}
-      <div class="field-row"><label>URL embed SoundCloud</label>
+      <div class="field-row"><label>SoundCloud embed URL</label>
         ${inp('b-sc-url', c.sc_url||'', 'https://w.soundcloud.com/player/?url=...')}
-        <p class="field-hint">Sur SoundCloud → Share → Embed → copie l'URL dans src="..."</p>
+        <p class="field-hint">On SoundCloud → Share → Embed → copy the URL from src="..."</p>
       </div>
-      <div class="field-row"><label>note (optionnel)</label>
+      <div class="field-row"><label>note (optional)</label>
         ${inp('b-mus-note', c.note||'')}
       </div>`;
   }
@@ -726,44 +726,44 @@ function renderBaseFields(saved = null) {
     const ings  = c.ingredients||[''];
     const steps = c.steps||[''];
     cont.innerHTML = `
-      <div class="field-row"><label>pour combien / durée</label>${inp('b-serves', c.serves||'', '2 personnes — 30 min')}</div>
-      <div class="field-row"><label>ingrédients</label>
+      <div class="field-row"><label>serves / duration</label>${inp('b-serves', c.serves||'', '2 people — 30 min')}</div>
+      <div class="field-row"><label>ingredients</label>
         <div class="tags-wrap" id="ings-wrap">${ings.map((v,i)=>tagRow('ing',i,v)).join('')}</div>
-        <button class="tag-add" onclick="addTag('ing','ings-wrap')">+ ingrédient</button>
+        <button class="tag-add" onclick="addTag('ing','ings-wrap')">+ ingredient</button>
       </div>
-      <div class="field-row"><label>étapes</label>
+      <div class="field-row"><label>steps</label>
         <div class="tags-wrap" id="steps-wrap">${steps.map((v,i)=>tagRow('step',i,v)).join('')}</div>
-        <button class="tag-add" onclick="addTag('step','steps-wrap')">+ étape</button>
+        <button class="tag-add" onclick="addTag('step','steps-wrap')">+ step</button>
       </div>`;
   }
   else if (type === 'typing') {
-    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">Le jeu typing est généré automatiquement — rien à configurer !</p>`;
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">The typing game is generated automatically — nothing to configure!</p>`;
   }
   else if (type === 'memoire') {
-    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">Le jeu mémoire est généré automatiquement — rien à configurer !</p>`;
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">The memory game is generated automatically — nothing to configure!</p>`;
   }
   else if (type === 'jeu2048') {
-    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">Le jeu 2048 est généré automatiquement — rien à configurer !</p>`;
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">The 2048 game is generated automatically — nothing to configure!</p>`;
   }
   else if (type === 'snake') {
-    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">Le jeu snake est généré automatiquement — rien à configurer !</p>`;
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">The snake game is generated automatically — nothing to configure!</p>`;
   }
   else if (type === 'libre') {
-    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">Aucun contenu principal — ajoute des blocs ci-dessous.</p>`;
+    cont.innerHTML = `<p class="field-hint" style="font-style:italic;opacity:0.45">No main content — add blocks below.</p>`;
   }
   else if (type === 'jeu') {
     cont.innerHTML = `
-      <div class="field-row"><label>sous-titre (optionnel)</label>
+      <div class="field-row"><label>subtitle (optional)</label>
         <input type="text" id="b-subtitle" value="${esc(c.subtitle||'')}" placeholder="ex: brick breaker">
       </div>
-      <p class="field-hint" style="margin-top:-0.5rem">Le jeu est généré automatiquement — rien d'autre à configurer !</p>`;
+      <p class="field-hint" style="margin-top:-0.5rem">The game is generated automatically — nothing else to configure!</p>`;
   }
   else if (type === 'wip') {
     const prog = c.progress||0;
     cont.innerHTML = `
-      <div class="field-row"><label>statut</label>${inp('b-status', c.status||'', 'en cours depuis 3 mois...')}</div>
+      <div class="field-row"><label>status</label>${inp('b-status', c.status||'', 'in progress for 3 months...')}</div>
       <div class="field-row"><label>description</label>${htmlToolbar('b-body')}${ta('b-body', c.body||'')}</div>
-      <div class="field-row"><label>avancement</label>
+      <div class="field-row"><label>progress</label>
         <div class="range-row">
           <input type="range" id="b-progress" min="0" max="100" value="${prog}"
             oninput="document.getElementById('rv').textContent=this.value+'%'">
@@ -893,7 +893,7 @@ function renderBlocks() {
   if (blocks.length === 0) { area.innerHTML = ''; return; }
 
   area.innerHTML = blocks.map((b, i) => {
-    const labels = { text:'texte libre', image:'image', video:'vidéo vimeo', audio:'audio' };
+    const labels = { text:'free text', image:'image', video:'video vimeo', audio:'audio' };
     return `
       <div class="block" id="block-${b.id}">
         <div class="block-header">
@@ -901,7 +901,7 @@ function renderBlocks() {
           <div class="block-actions">
             <button class="block-btn" onclick="moveBlock(${b.id},-1)" title="monter">↑</button>
             <button class="block-btn" onclick="moveBlock(${b.id},1)" title="descendre">↓</button>
-            <button class="block-btn del" onclick="removeBlock(${b.id})" title="supprimer">×</button>
+            <button class="block-btn del" onclick="removeBlock(${b.id})" title="delete">×</button>
           </div>
         </div>
         <div class="block-body">${blockFields(b)}</div>
