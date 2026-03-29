@@ -918,7 +918,7 @@ function blockFields(b) {
   }
   if (b.type === 'image') {
     return imageField(`${bid}-img`, d.url||'', b.id) +
-      `<div class="field-row" style="margin-top:0.7rem"><label>légende (optionnel)</label><input type="text" id="${bid}-caption" value="${esc(d.caption||'')}"></div>`;
+      `<div class="field-row" style="margin-top:0.7rem"><label>caption (optional)</label><input type="text" id="${bid}-caption" value="${esc(d.caption||'')}"></div>`;
   }
   if (b.type === 'video') {
     return `<label>ID Vimeo</label><input type="text" id="${bid}-vimeo" value="${esc(d.vimeo_id||'')}" placeholder="ex: 148751763">
@@ -979,7 +979,7 @@ function collectBlocks() {
     const bid = `blk-${b.id}`;
     const v = id => document.getElementById(id)?.value?.trim()||'';
     if (b.type==='text')  return { type:'text',  data:{ html: v(`${bid}-html`) } };
-    if (b.type==='image') return { type:'image', data:{ url: v(`${bid}-img-url`) || v(`${bid}-img-blk-${b.id}-img-url`), caption: v(`${bid}-caption`) } };
+    if (b.type==='image') return { type:'image', data:{ url: v(`${bid}-url`) || v(`${bid}-img-url`), caption: v(`${bid}-caption`) } };
     if (b.type==='video') return { type:'video', data:{ vimeo_id: v(`${bid}-vimeo`), description: v(`${bid}-desc`) } };
     if (b.type==='audio') return { type:'audio', data:{ track_title: v(`${bid}-track`), audio_url: v(`${bid}-url`), note: v(`${bid}-note`) } };
     return b;
