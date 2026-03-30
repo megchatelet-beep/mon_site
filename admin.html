@@ -908,8 +908,13 @@ function blockFields(b) {
       ${htmlToolbar(`${bid}-html`)}`;
   }
   if (b.type === 'image') {
-    return imageField(`${bid}-img`, d.url||'', b.id) +
-      `<div class="field-row" style="margin-top:0.7rem"><label>caption (optional)</label><input type="text" id="${bid}-caption" value="${esc(d.caption||'')}"></div>`;
+    const imgs = Array.isArray(d.images) ? d.images : (d.url ? [d.url] : ['']);
+    return `<div>
+      <div id="${bid}-img-slots">${imgs.map((url,i) => imgSlot(i, url)).join('')}</div>
+      <button class="tag-add" onclick="addBlockImgSlot('${bid}')" style="margin-top:0.5rem">+ add image</button>
+      <p class="field-hint">Grid adapts automatically to number of images.</p>
+    </div>
+    <div class="field-row" style="margin-top:0.7rem"><label>caption (optional)</label><input type="text" id="${bid}-caption" value="${esc(d.caption||'')}"></div>`;
   }
   if (b.type === 'video') {
     return `<label>ID Vimeo</label><input type="text" id="${bid}-vimeo" value="${esc(d.vimeo_id||'')}" placeholder="ex: 148751763">
@@ -979,7 +984,11 @@ function collectBlocks() {
     const bid = `blk-${b.id}`;
     const v = id => document.getElementById(id)?.value?.trim()||'';
     if (b.type==='text')  return { type:'text',  data:{ html: v(`${bid}-html`) } };
-    if (b.type==='image') return { type:'image', data:{ url: v(`${bid}-url`) || v(`${bid}-img-url`), caption: v(`${bid}-caption`) } };
+    if (b.type==='image') {
+      const slots = document.getElementById(`${bid}-img-slots`);
+      const images = slots ? [...slots.querySelectorAll('.img-slot-url')].map(i=>i.value.trim()).filter(Boolean) : [];
+      return { type:'image', data:{ images, caption: v(`${bid}-caption`) } };
+    }
     if (b.type==='video') return { type:'video', data:{ vimeo_id: v(`${bid}-vimeo`), description: v(`${bid}-desc`) } };
     if (b.type==='audio') return { type:'audio', data:{ track_title: v(`${bid}-track`), audio_url: v(`${bid}-url`), note: v(`${bid}-note`) } };
     return b;
@@ -1233,6 +1242,15 @@ async function handleAudioBlockUpload(input, bid) {
   } catch(e) {
     if (prog) prog.textContent = 'upload error';
   }
+}
+
+function addBlockImgSlot(bid) {
+  const slots = document.getElementById(`${bid}-img-slots`);
+  if (!slots) return;
+  const idx = slots.children.length;
+  const div = document.createElement('div');
+  div.innerHTML = imgSlot(idx, '');
+  slots.appendChild(div.firstElementChild);
 }
 
 function addKeyword(val='') {
