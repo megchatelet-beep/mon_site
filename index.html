@@ -363,9 +363,11 @@ function renderEntry(d) {
 
 function renderBase(type, title, c) {
   if (type==='essay')
-    return `<h1 class="essay-title">${title}</h1><div class="essay-body">${autoParagraph(c.body||'')}</div>`;
+    return `<h1 class="essay-title">${title}</h1><p class="fiction-genre">essay</p><div class="essay-body">${autoParagraph(c.body||'')}</div>`;
   if (type==='fiction')
-    return `<h1 class="fiction-title">${title}</h1>${c.genre?`<p class="fiction-genre">${c.genre}</p>`:''}<div class="fiction-body">${autoParagraph(c.body||'')}</div>`;
+    return `<h1 class="fiction-title">${title}</h1>${c.genre?`<p class="fiction-genre">${c.genre}</p>`:`<p class="fiction-genre">fiction</p>`}<div class="fiction-body">${autoParagraph(c.body||'')}</div>`;
+  if (type==='poeme')
+    return `${(c.title||title)?`<h1 class="poeme-title">${c.title||title}</h1>`:''}<p class="fiction-genre">poetry</p><p class="poeme-body">${c.body||''}</p>`;
   if (type==='video')
     return `<p class="video-title">${title}</p><div class="video-wrap"><iframe src="https://player.vimeo.com/video/${c.vimeo_id}?color=ffffff&title=0&byline=0&portrait=0&dnt=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div><p class="video-desc">${c.description||''}</p>`;
   if (type==='audio') {
@@ -419,8 +421,6 @@ function renderBase(type, title, c) {
     return `<p class="lien-url">${c.url||''}</p><h1 class="lien-title">${c.title||title}</h1><p class="lien-comment">${c.comment||''}</p>${c.url?`<a class="lien-btn" href="${c.url}" target="_blank">ouvrir le lien →</a>`:''}`;
   if (type==='recommendation')
     return `<p class="reco-kind">${c.kind||''}</p><h1 class="reco-title">${c.title||title}</h1><p class="reco-author">${c.author||''}</p><p class="reco-desc">${c.description||''}</p>`;
-  if (type==='poeme')
-    return `${(c.title||title)?`<p class="poeme-title">${c.title||title}</p>`:''}<p class="poeme-body">${c.body||''}</p>`;
   if (type==='musique') {
     const t = c.title||title||'';
     const artist = c.artist ? `<p class="musique-artist">${c.artist}</p>` : '';
