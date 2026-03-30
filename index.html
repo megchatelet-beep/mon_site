@@ -453,8 +453,14 @@ function renderBlock(b) {
   const d = b.data || {};
   if (b.type==='text')
     return `<div class="block-text">${d.html||''}</div>`;
-  if (b.type==='image')
-    return `<div class="block-image"><img src="${d.url||''}" alt=""></div>${d.caption?`<p class="block-image-cap">${d.caption}</p>`:''}`;
+  if (b.type==='image') {
+    const imgs = d.images || (d.url ? [d.url] : []);
+    const cap = d.caption ? `<p class="image-caption">${d.caption}</p>` : '';
+    if (!imgs.length) return '';
+    if (imgs.length===1) return `<div class="image-wrap"><img src="${imgs[0]}" alt=""></div>${cap}`;
+    return `<div class="image-auto-grid">${imgs.map(s=>`<img src="${s}" alt="">`).join('')}</div>${cap}`;
+  }
+
   if (b.type==='video')
     return `<div class="video-wrap"><iframe src="https://player.vimeo.com/video/${d.vimeo_id}?color=ffffff&title=0&byline=0&portrait=0&dnt=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>${d.description?`<p class="video-desc">${d.description}</p>`:''}`;
   if (b.type==='audio')
