@@ -316,8 +316,17 @@ function nextPage() {
         [deck[i],deck[j]]=[deck[j],deck[i]];
       }
     }
-    // Pick next from deck
-    curIdx = deck.shift();
+    // Pick next — avoid same category as current, avoid game as first
+    const curCat = curIdx >= 0 ? allPages[curIdx]?.category : null;
+    const isFirst = curIdx === -1;
+    let picked = deck.findIndex(i => {
+      const cat = allPages[i]?.category;
+      if (isFirst && cat === 'jeu') return false;
+      if (cat === curCat) return false;
+      return true;
+    });
+    if (picked === -1) picked = 0;
+    curIdx = deck.splice(picked, 1)[0];
     const d = allPages[curIdx];
     const c = CAT[d.category]||CAT.notes;
     document.body.style.backgroundColor = c.bg;
