@@ -824,15 +824,19 @@ async function handleUpload(input, bid) {
     });
     if (r.ok) {
       const url = `${SUPABASE_URL}/storage/v1/object/public/images/${name}`;
-      const urlInput = document.getElementById(`${bid}-url`);
-      if (urlInput) urlInput.value = url;
+      // Find the URL input — try multiple selectors
+      const urlInput = document.getElementById(`${bid}-url`) 
+        || document.getElementById(`${bid}-img-url`)
+        || document.querySelector(`#${bid}-url-area .img-slot-url`)
+        || document.querySelector(`#${bid}-url-area input[type="url"]`);
+      if (urlInput) { urlInput.value = url; urlInput.classList.add('img-slot-url'); }
       const prev = document.getElementById(`${bid}-preview`);
-      if (prev) prev.innerHTML = `<img src="${url}" alt="">`;
+      if (prev) prev.innerHTML = `<img src="${url}" alt="" style="max-height:100px;margin-top:0.4rem;display:block">`;
       if (prog) prog.textContent = '✓ image uploaded';
-      // Switch to URL tab to show the result
-      const tabs = document.querySelectorAll(`#${bid}-url-area`);
-      document.getElementById(`${bid}-url-area`).style.display = '';
-      document.getElementById(`${bid}-upload-area`).style.display = 'none';
+      const urlArea = document.getElementById(`${bid}-url-area`);
+      const uploadArea = document.getElementById(`${bid}-upload-area`);
+      if (urlArea) urlArea.style.display = '';
+      if (uploadArea) uploadArea.style.display = 'none';
     } else {
       if (prog) prog.textContent = 'upload error — check Supabase Storage bucket';
     }
@@ -949,7 +953,10 @@ function collectBase() {
     return { ablocks };
   }
   if (type==='image') {
-    const images = [...document.querySelectorAll('.img-slot-url')].map(i=>i.value.trim()).filter(Boolean);
+    const container = document.getElementById('img-slots');
+    const images = container 
+      ? [...container.querySelectorAll('.img-slot-url')].map(i=>i.value.trim()).filter(Boolean)
+      : [];
     return { layout:'auto', images, caption: v('b-caption') };
   }
   if (type==='bd')             return { images: [...document.querySelectorAll('.bd-input')].map(i=>i.value).filter(Boolean), note: v('b-note') };
@@ -985,8 +992,11 @@ function collectBlocks() {
     const v = id => document.getElementById(id)?.value?.trim()||'';
     if (b.type==='text')  return { type:'text',  data:{ html: v(`${bid}-html`) } };
     if (b.type==='image') {
-      const slots = document.getElementById(`${bid}-img-slots`);
-      const images = slots ? [...slots.querySelectorAll('.img-slot-url')].map(i=>i.value.trim()).filter(Boolean) : [];
+      const wrap = document.getElementById(`${bid}-wrap`) || document.getElementById(`${bid}`);
+      const container = document.getElementById(`${bid}-img-slots`);
+      const images = container 
+        ? [...container.querySelectorAll('.img-slot-url')].map(i=>i.value.trim()).filter(Boolean)
+        : [];
       return { type:'image', data:{ images, caption: v(`${bid}-caption`) } };
     }
     if (b.type==='video') return { type:'video', data:{ vimeo_id: v(`${bid}-vimeo`), description: v(`${bid}-desc`) } };
