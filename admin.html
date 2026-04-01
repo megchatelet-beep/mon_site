@@ -863,17 +863,39 @@ function addTag(prefix, wrapId) {
 
 // ══ BLOCKS ══════════════════════════════════════════
 
+function saveBlocksState() {
+  // Save current DOM state back to blocks array before re-rendering
+  blocks = blocks.map(b => {
+    const bid = `blk-${b.id}`;
+    const v = id => document.getElementById(id)?.value?.trim()||'';
+    if (b.type==='text') return { ...b, data:{ html: v(`${bid}-html`) } };
+    if (b.type==='image') {
+      const container = document.getElementById(`${bid}-img-slots`);
+      const images = container
+        ? [...container.querySelectorAll('.img-slot-url')].map(i=>i.value.trim()).filter(Boolean)
+        : (b.data?.images || []);
+      return { ...b, data:{ images, caption: v(`${bid}-caption`) } };
+    }
+    if (b.type==='video') return { ...b, data:{ vimeo_id: v(`${bid}-vimeo`), description: v(`${bid}-desc`) } };
+    if (b.type==='audio') return { ...b, data:{ track_title: v(`${bid}-track`), audio_url: v(`${bid}-url`), note: v(`${bid}-note`) } };
+    return b;
+  });
+}
+
 function addBlock(type, data={}) {
+  saveBlocksState();
   blocks.push({ id: blockCtr++, type, data });
   renderBlocks();
 }
 
 function removeBlock(id) {
+  saveBlocksState();
   blocks = blocks.filter(b => b.id !== id);
   renderBlocks();
 }
 
 function moveBlock(id, dir) {
+  saveBlocksState();
   const i = blocks.findIndex(b => b.id === id);
   if (dir === -1 && i === 0) return;
   if (dir === 1 && i === blocks.length-1) return;
