@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-<script defer src="https://cloud.umami.is/script.js" data-website-id="f26e6e93-fb40-4afe-b4fb-642a91739d76"></script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -95,11 +94,14 @@ sup.fn:hover { opacity:1; }
 .image-caption { font-family:'JetBrains Mono',monospace; font-size:0.62rem; opacity:0.36; margin-top:0.7rem; }
 .image-auto-grid {
   display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap:0.4rem;
   margin-bottom:0.6rem;
 }
-.image-auto-grid img { width:100%; display:block; object-fit:cover; aspect-ratio:1; }
+.image-auto-grid img { width:100%; display:block; height:auto; }
+@media (min-width:600px) {
+  .image-auto-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+}
 
 .bd-title { font-size:clamp(1.3rem,3vw,1.9rem); font-weight:400; font-style:normal; line-height:1.35; margin-bottom:1.4rem; font-family:'Lora',serif; letter-spacing:0.01em; }
 .bd-images { display:flex; flex-direction:column; gap:0.6rem; }
@@ -196,6 +198,7 @@ sup.fn:hover { opacity:1; }
 ::-webkit-scrollbar { width:2px; }
 ::-webkit-scrollbar-thumb { background:currentColor; opacity:0.12; }
 </style>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="f26e6e93-fb40-4afe-b4fb-642a91739d76"></script>
 </head>
 <body>
 
